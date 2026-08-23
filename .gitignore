@@ -1,0 +1,5 @@
+node_modules/
+db-init/
+postman/
+.postman/
+!.vscode/extensions.json
