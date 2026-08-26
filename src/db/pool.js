@@ -1,4 +1,6 @@
-const { Pool } = require("pg");
+import pg from "pg";
+
+const { Pool } = pg;
 
 // A single shared connection pool for the whole app. Every query should go
 // through this rather than opening ad-hoc clients.
@@ -15,4 +17,4 @@ pool.on("error", (err) => {
   console.error("Unexpected PG pool error:", err);
 });
 
-module.exports = pool;
+export default pool;

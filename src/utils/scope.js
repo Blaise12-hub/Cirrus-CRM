@@ -19,4 +19,4 @@ function ownerScope(user, ownerColumn, paramsSoFar = []) {
   };
 }
 
-module.exports = { ownerScope };
+export { ownerScope };

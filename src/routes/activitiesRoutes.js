@@ -1,6 +1,6 @@
-const express = require("express");
-const pool = require("../db/pool");
-const { requireAuth } = require("../middleware/auth");
+import express from "express";
+import pool from "../db/pool.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 router.use(requireAuth);
@@ -120,4 +120,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

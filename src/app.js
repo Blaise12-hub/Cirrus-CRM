@@ -1,14 +1,18 @@
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import "dotenv/config";
 
-const authRoutes = require("./routes/authRoutes");
-const accountsRoutes = require("./routes/accountsRoutes");
-const contactsRoutes = require("./routes/contactsRoutes");
-const opportunitiesRoutes = require("./routes/opportunitiesRoutes");
-const leadsRoutes = require("./routes/leadsRoutes");
-const activitiesRoutes = require("./routes/activitiesRoutes");
+//import routes
+import authRoutes from "./routes/authRoutes.js";
+import accountsRoutes from "./routes/accountsRoutes.js";
+import contactsRoutes from "./routes/contactsRoutes.js";
+import opportunitiesRoutes from "./routes/opportunitiesRoutes.js";
+import leadsRoutes from "./routes/leadsRoutes.js";
+import activitiesRoutes from "./routes/activitiesRoutes.js";  
+
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
@@ -33,4 +37,5 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-module.exports = app;
+export default app;
+

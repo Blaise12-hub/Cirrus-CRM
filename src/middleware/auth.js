@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 // Verifies the JWT and attaches { user_id, role } to req.user.
 // Every protected route uses this first.
@@ -29,4 +29,4 @@ function requireRole(...allowedRoles) {
   };
 }
 
-module.exports = { requireAuth, requireRole };
+export { requireAuth, requireRole };

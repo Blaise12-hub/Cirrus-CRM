@@ -95,3 +95,7 @@ or the next real INSERT will collide with a seeded row.
 - Add request validation (e.g. `zod` or `joi`) instead of manual field checks
 - Add a `products`/`opportunity_products` route set if you need line-item management via API
 - Build the frontend against this API (pipeline kanban board is the natural next screen)
+=======
+# Cirrus-CRM
+CRM system designed for SMEs to manage leads, pipeline sales, and customer communication.
+
