@@ -6,7 +6,7 @@ import { ownerScope } from "../utils/scope.js";
 const router = express.Router();
 router.use(requireAuth);
 
-// GET /api/contacts?account_id=5  -- optional filter by account
+// select acount by id
 router.get("/", async (req, res) => {
   try {
     const conditions = ["1=1"];
@@ -30,7 +30,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/contacts/:id
+// GET contacts by id
 router.get("/:id", async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM crm.contacts WHERE contact_id = $1`, [req.params.id]);
@@ -62,12 +62,15 @@ router.post("/", async (req, res) => {
     if (err.code === "23505") {
       return res.status(409).json({ error: "A contact with this email already exists" });
     }
+    if (err.code === "23503") {
+      return res.status(400).json({ error: "account_id does not refer to an existing account" });
+    }
     console.error(err);
     res.status(500).json({ error: "Failed to create contact" });
   }
 });
 
-// PATCH /api/contacts/:id
+// edit contacts by id
 router.patch("/:id", async (req, res) => {
   const fields = ["account_id", "first_name", "last_name", "email", "phone", "job_title", "owner_id"];
   const updates = fields.filter((f) => req.body[f] !== undefined);
@@ -91,6 +94,12 @@ router.patch("/:id", async (req, res) => {
     }
     res.json(result.rows[0]);
   } catch (err) {
+     if (err.code === "23505") {
+      return res.status(409).json({ error: "A contact with this email already exists" });
+    }
+    if (err.code === "23503") {
+      return res.status(400).json({ error: "account_id does not refer to an existing account" });
+    }
     console.error(err);
     res.status(500).json({ error: "Failed to update contact" });
   }

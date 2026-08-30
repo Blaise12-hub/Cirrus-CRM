@@ -113,7 +113,7 @@ router.patch("/:id/stage", async (req, res) => {
   }
 });
 
-// PATCH /api/opportunities/:id  -- general field updates
+// PATCH(update) /api/opportunities/:id  -- general field updates
 router.patch("/:id", async (req, res) => {
   const fields = ["account_id", "contact_id", "name", "stage", "amount", "close_date", "probability", "owner_id"];
   const updates = fields.filter((f) => req.body[f] !== undefined);
@@ -140,6 +140,9 @@ router.patch("/:id", async (req, res) => {
     }
     res.json(result.rows[0]);
   } catch (err) {
+     if (err.code === "23503") {
+      return res.status(400).json({ error: "Referenced account or contact does not exist" });
+    }
     console.error(err);
     res.status(500).json({ error: "Failed to update opportunity" });
   }
