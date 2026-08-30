@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, CheckCircle2, Circle } from "lucide-react";
 import { activitiesApi } from "../api/resources";
 import { shortDate, todayISO } from "./Shared";
+import { TimelineSkeleton } from "./Skeleton";
 
 const ACTIVITY_TYPES = ["call", "email", "meeting", "task", "note"];
 
@@ -10,7 +11,7 @@ function icon(type) {
 }
 
 export function ActivityTimeline({ activities, loading }) {
-  if (loading) return <div className="table-state">Loading…</div>;
+  if (loading) return <TimelineSkeleton rows={3} />;
   if (!activities || activities.length === 0) {
     return <div className="empty-block">No activity logged yet.</div>;
   }

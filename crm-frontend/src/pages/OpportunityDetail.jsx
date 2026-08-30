@@ -5,6 +5,7 @@ import { opportunitiesApi, contactsApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money, longDate } from "../components/Shared";
 import { ProbabilityMeter } from "../components/Badges";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
+import { DetailSkeleton } from "../components/Skeleton";
 
 //mock data
 const STAGES = [
@@ -67,7 +68,7 @@ export default function OpportunityDetail() {
     }
   };
 
-  if (loading) return <div className="view"><div className="table-state">Loading opportunity…</div></div>;
+  if (loading) return <DetailSkeleton />;
   if (error && !opp) return <div className="view"><div className="form-error">{error}</div></div>;
   if (!opp) return <div className="view">Opportunity not found.</div>;
 

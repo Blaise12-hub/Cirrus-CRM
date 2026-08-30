@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
@@ -20,6 +20,9 @@ export default function Sidebar() {
     navigate("/login", { replace: true });
   };
 
+  //this restrict user mgt to only admin & managers
+  const canManageUsers = user && (user.role === "admin" || user.role === "manager");
+
   return (
     <div className="sidebar">
       <div className="brand">Cirrus <span>CRM</span></div>
@@ -34,6 +37,12 @@ export default function Sidebar() {
           {item.label}
         </NavLink>
       ))}
+      {canManageUsers && (
+        <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <ShieldCheck size={16} />
+          Users
+        </NavLink>
+      )}
 
       <div className="sidebar-footer">
         {user && (

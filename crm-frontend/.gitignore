@@ -1,0 +1,15 @@
+
+# Ignore dependency folders
+node_modules/
+
+# Ignore Python virtual environments (if you use Python)
+venv/
+.venv/
+env/
+
+# Ignore environment variable secrets
+.env
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db

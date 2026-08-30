@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { contactsApi, accountsApi } from "../api/resources";
 import { DataTable } from "../components/Shared";
+import NewContactModal from "../components/NewContactModal";
 
 export default function ContactsList() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function ContactsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [showNew, setShowNew] = useState(false);
 
   useEffect(() => {
     Promise.all([contactsApi.list(), accountsApi.list()])
@@ -29,9 +31,14 @@ export default function ContactsList() {
     <div className="view">
       <div className="pb-header">
         <h1 className="page-title" style={{ marginBottom: 0 }}>Contacts</h1>
-        <div className="search-box">
-          <Search size={14} />
-          <input placeholder="Search contacts" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div style={{ display: "flex", gap: 10 }}>
+          <div className="search-box">
+            <Search size={14} />
+            <input placeholder="Search contacts" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+          <button className="btn-primary" onClick={() => setShowNew(true)}>
+            <Plus size={14} style={{ verticalAlign: "-2px", marginRight: 4 }} /> New contact
+          </button>
         </div>
       </div>
 
@@ -49,6 +56,18 @@ export default function ContactsList() {
         rows={rows}
         onRowClick={(r) => navigate(`/contacts/${r.contact_id}`)}
       />
+    {/* //new contact modal */}
+      {showNew && (
+        <NewContactModal
+          accounts={accounts}
+          onClose={() => setShowNew(false)}
+          onCreated={(created) => {
+            setContacts((prev) => [...prev, created]);
+            setShowNew(false);
+            navigate(`/contacts/${created.contact_id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

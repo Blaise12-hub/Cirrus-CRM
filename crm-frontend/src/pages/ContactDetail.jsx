@@ -4,6 +4,7 @@ import { Mail, Phone, Building2, ChevronRight } from "lucide-react";
 import { contactsApi, accountsApi, opportunitiesApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money } from "../components/Shared";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
+import { DetailSkeleton } from "../components/Skeleton";
 
 export default function ContactDetail() {
   const { id } = useParams();
@@ -44,7 +45,7 @@ export default function ContactDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <div className="view"><div className="table-state">Loading contact…</div></div>;
+  if (loading) return <DetailSkeleton />;
   if (error) return <div className="view"><div className="form-error">{error}</div></div>;
   if (!contact) return <div className="view">Contact not found.</div>;
 

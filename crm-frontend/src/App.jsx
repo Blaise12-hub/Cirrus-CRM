@@ -12,6 +12,7 @@ import ContactsList from "./pages/ContactsList";
 import ContactDetail from "./pages/ContactDetail";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import Leads from "./pages/Leads";
+import Users  from "./pages/Users";
 
 function AppLayout({ children }) {
   return (
@@ -52,6 +53,9 @@ export default function App() {
           } />
           <Route path="/leads" element={
             <ProtectedRoute><AppLayout><Leads /></AppLayout></ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
           } />
         </Routes>
       </BrowserRouter>

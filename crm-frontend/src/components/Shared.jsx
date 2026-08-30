@@ -1,4 +1,5 @@
 import React from "react";
+import { TableSkeleton } from "./Skeleton";
 
 export const money = (n) => "$" + Number(n || 0).toLocaleString("en-US");
 export const shortDate = (d) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
@@ -6,7 +7,7 @@ export const longDate = (d) => (d ? new Date(d).toLocaleDateString("en-US", { mo
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export function DataTable({ columns, rows, onRowClick, loading, emptyMessage = "Nothing here yet." }) {
-  if (loading) return <div className="table-state">Loading…</div>;
+  if (loading) return <TableSkeleton columns={columns.length} />;
   if (!rows || rows.length === 0) return <div className="table-state">{emptyMessage}</div>;
 
   return (

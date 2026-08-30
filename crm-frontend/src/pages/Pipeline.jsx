@@ -4,6 +4,7 @@ import { Search, GripVertical } from "lucide-react";
 import { opportunitiesApi } from "../api/resources";
 import { money, shortDate } from "../components/Shared";
 import { ProbabilityMeter } from "../components/Badges";
+import { KanbanSkeleton } from "../components/Skeleton";
 
 //mock data
 const STAGES = [
@@ -65,7 +66,8 @@ export default function Pipeline() {
     }
   };
 
-  if (loading) return <div className="view"><div className="table-state">Loading pipeline…</div></div>;
+  //kanban-shaped skeleton loader
+  if (loading) return <div className="view"><h1 className="page-title">Pipeline</h1><KanbanSkeleton /></div>;
 
   return (
     <div className="view">

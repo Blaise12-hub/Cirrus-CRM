@@ -4,6 +4,7 @@ import { opportunitiesApi, leadsApi } from "../api/resources";
 import { money } from "../components/Shared";
 import { ActivityTimeline } from "../components/Activity";
 import { useAuth } from "../context/AuthContext";
+import { DetailSkeleton } from "../components/Skeleton";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -31,7 +32,8 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, []);
 
-  if (loading) return <div className="view"><div className="table-state">Loading dashboard…</div></div>;
+  //skeleton loader
+  if (loading) return <DetailSkeleton />;
   if (error) return <div className="view"><div className="form-error">{error}</div></div>;
 
   const open = opportunities.filter((o) => o.stage !== "won" && o.stage !== "lost");

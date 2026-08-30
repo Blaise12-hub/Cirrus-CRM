@@ -5,6 +5,15 @@ export const authApi = {
   register: (payload) => api.postPublic("/auth/register", payload),
 };
 
+export const usersApi = {
+  list: () => api.get("/users"),
+  get: (id) => api.get(`/users/${id}`),
+  create: (payload) => api.post("/users", payload),
+  update: (id, payload) => api.patch(`/users/${id}`, payload),
+  setPassword: (id, password) => api.patch(`/users/${id}/password`, { password }),
+  deactivate: (id) => api.delete(`/users/${id}`),
+};
+
 export const accountsApi = {
   list: () => api.get("/accounts"),
   get: (id) => api.get(`/accounts/${id}`),

@@ -4,6 +4,7 @@ import { Phone, Globe, ChevronRight } from "lucide-react";
 import { accountsApi, contactsApi, opportunitiesApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money } from "../components/Shared";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
+import { DetailSkeleton } from "../components/Skeleton";
 
 export default function AccountDetail() {
   const { id } = useParams();
@@ -36,9 +37,8 @@ export default function AccountDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <div className="view"><div className="table-state">Loading account…</div></div>;
+  if (loading) return <DetailSkeleton />;  //skeleton loader
   if (error) return <div className="view"><div className="form-error">{error}</div></div>;
-  //when there's no account
   if (!account) return <div className="view">Account not found.</div>;
 
   return (
