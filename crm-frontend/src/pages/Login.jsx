@@ -24,6 +24,7 @@ export default function Login() {
     }
   };
 
+
   return (
     <div className="login-root">
       <div className="login-card">
@@ -37,7 +38,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
+              placeholder="Eg:you@company.com"
               autoFocus
               required
             />
