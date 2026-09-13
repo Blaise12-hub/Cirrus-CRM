@@ -4,6 +4,7 @@ import { Mail, Phone, Building2, ChevronRight } from "lucide-react";
 import { contactsApi, accountsApi, opportunitiesApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money } from "../components/Shared";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
+import ReassignOwner from "../components/ReassignOwner";
 import { DetailSkeleton } from "../components/Skeleton";
 
 export default function ContactDetail() {
@@ -61,6 +62,7 @@ export default function ContactDetail() {
       <div className="detail-info-row">
         {contact.email && <span><Mail size={13} /> {contact.email}</span>}
         {contact.phone && <span><Phone size={13} /> {contact.phone}</span>}
+        <ReassignOwner entityType="contact" entityId={Number(id)} currentOwnerId={contact.owner_id} onReassigned={setContact} />
         {account && (
           <span className="link-chip" onClick={() => navigate(`/accounts/${account.account_id}`)}>
             <Building2 size={13} /> {account.account_name}

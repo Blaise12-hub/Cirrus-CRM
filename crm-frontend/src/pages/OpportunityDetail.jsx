@@ -5,6 +5,8 @@ import { opportunitiesApi, contactsApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money, longDate } from "../components/Shared";
 import { ProbabilityMeter } from "../components/Badges";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
+import ReassignOwner from "../components/ReassignOwner";
+import OpportunityProducts from "../components/OpportunityProducts";
 import { DetailSkeleton } from "../components/Skeleton";
 
 //mock data
@@ -122,6 +124,7 @@ export default function OpportunityDetail() {
           </div>
           <ActivityTimeline activities={activities} />
         </div>
+        <OpportunityProducts opportunityId={Number(id)} />
       </div>
     </div>
   );

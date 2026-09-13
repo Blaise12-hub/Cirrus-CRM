@@ -13,6 +13,7 @@ import ContactDetail from "./pages/ContactDetail";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import Leads from "./pages/Leads";
 import Users  from "./pages/Users";
+import Products from "./pages/Products";
 
 function AppLayout({ children }) {
   return (
@@ -57,6 +58,8 @@ export default function App() {
           <Route path="/users" element={
             <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
           } />
+          <Route path="/products" element={
+            <ProtectedRoute roles={['admin','manager']}><Products /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
      </AuthProvider>

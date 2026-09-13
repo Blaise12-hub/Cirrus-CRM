@@ -4,6 +4,7 @@ import { Search, X, ArrowRightCircle } from "lucide-react";
 import { leadsApi } from "../api/resources";
 import { DataTable } from "../components/Shared";
 import { LeadStatusPill } from "../components/Badges";
+import NewLeadModal from "../components/NewLeadModal";
 
 function ConvertLeadModal({ lead, onClose, onConfirm, saving, error }) {
   const [createAccount, setCreateAccount] = useState(!!lead.company_name);
@@ -49,6 +50,7 @@ export default function Leads() {
   const [convertingLead, setConvertingLead] = useState(null);
   const [converting, setConverting] = useState(false);
   const [convertError, setConvertError] = useState("");
+  const [showNewLead, setShowNewLead] = useState(false);
 
   useEffect(() => {
     leadsApi.list()

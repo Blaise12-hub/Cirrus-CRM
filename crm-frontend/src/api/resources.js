@@ -30,6 +30,10 @@ export const contactsApi = {
   remove: (id) => api.delete(`/contacts/${id}`),
 };
 
+export const dashboardApi = {
+  summary: () => api.get("/dashboard/summary"),
+};
+
 export const opportunitiesApi = {
   list: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
@@ -54,4 +58,17 @@ export const activitiesApi = {
   create: (payload) => api.post("/activities", payload),
   update: (id, payload) => api.patch(`/activities/${id}`, payload),
   remove: (id) => api.delete(`/activities/${id}`),
+};
+
+export const productsApi = {
+  list: (params) => apiFetch(`/products${params?.active ? "?active=true" : ""}`),
+  get: (id) => apiFetch(`/products/${id}`),
+  create: (data) => apiFetch("/products", { method: "POST", body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/products/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+};
+
+export const oppProductsApi = {
+  listFor: (oppId) => apiFetch(`/opportunities/${oppId}/products`),
+  upsert: (oppId, data) => apiFetch(`/opportunities/${oppId}/products`, { method: "POST", body: JSON.stringify(data) }),
+  remove: (oppId, productId) => apiFetch(`/opportunities/${oppId}/products/${productId}`, { method: "DELETE" }),
 };

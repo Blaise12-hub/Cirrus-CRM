@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut, ShieldCheck,Package } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { to: "/accounts", label: "Accounts", icon: Building2 },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/leads", label: "Leads", icon: UserPlus },
+  { to: "/products", label: "Products", icon: Package },
+
 ];
 
 export default function Sidebar() {
