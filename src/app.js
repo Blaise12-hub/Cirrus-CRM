@@ -8,7 +8,8 @@ import accountsRoutes from "./routes/accountsRoutes.js";
 import contactsRoutes from "./routes/contactsRoutes.js";
 import opportunitiesRoutes from "./routes/opportunitiesRoutes.js";
 import leadsRoutes from "./routes/leadsRoutes.js";
-import activitiesRoutes from "./routes/activitiesRoutes.js";  
+import activitiesRoutes from "./routes/activitiesRoutes.js"; 
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 
 const app = express();
@@ -26,6 +27,8 @@ app.use("/api/contacts", contactsRoutes);
 app.use("/api/opportunities", opportunitiesRoutes);
 app.use("/api/leads", leadsRoutes);
 app.use("/api/activities", activitiesRoutes);
+app.use("/api/dashboard", dashboardRoutes); 
+
 
 // displaying errors
 app.use((req, res) => {
