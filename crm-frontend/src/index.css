@@ -89,7 +89,7 @@ body {
 .skeleton-bar {
   display: inline-block;
   border-radius: 4px;
-  background: linear-gradient(90deg, #E8E7E6 25%, #F3F2F2 37%, #E8E7E6 63%);
+  background:linear-gradient(90deg, var(--color-skeleton-a) 25%, var(--color-skeleton-b) 37%, var(--color-skeleton-a) 63%);
   background-size: 400px 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
@@ -104,8 +104,8 @@ body {
 
 /* ---- Table ---- */
 .data-table { width: 100%; border-collapse: collapse; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
-.data-table th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-text-muted); padding: 10px 14px; border-bottom: 1px solid var(--color-border); background: #FAFAFA; }
-.data-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #EEEEEE; }
+.data-table th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-text-muted); padding: 10px 14px; border-bottom: 1px solid var(--color-border); background:  var(--color-table-header-bg); }
+.data-table td { padding: 11px 14px; font-size: 13px; border-bottom:1px solid var(--color-table-border); }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tbody tr:hover { background: #F7FAFD; cursor: pointer; }
 .owner-id-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--color-text-muted); }
@@ -122,7 +122,7 @@ body {
 
 /* ---- Kanban board ---- */
 .board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; }
-.column { flex: 0 0 260px; background: #EDECEC; border-radius: 8px; display: flex; flex-direction: column; max-height: calc(100vh - 220px); transition: background 0.15s ease; }
+.column { flex: 0 0 260px; background: var(--color-kanban-column-bg); border-radius: 8px; display: flex; flex-direction: column; max-height: calc(100vh - 220px); transition: background 0.15s ease; }
 .column.drag-over { background: #E1EBF7; }
 .column-header { padding: 12px 12px 10px 12px; border-top: 3px solid var(--accent); border-radius: 8px 8px 0 0; }
 .column-header-top { display: flex; justify-content: space-between; align-items: baseline; }
@@ -279,3 +279,55 @@ body {
 .line-item-add-row select { flex: 2; }
 .line-item-add-row input[type="number"] { flex: 1; width: 70px; }
 
+//dark mode
+/* === New tokens (replace the hardcoded literals below in index.css where noted) === */
+:root {
+  --color-table-header-bg: var(--color-table-header-bg);
+  --color-table-row-hover: var(--color-table-row-hover);
+  --color-table-border: #EEEEEE;
+  --color-kanban-column-bg: var(--color-kanban-column-bg);
+  --color-skeleton-a: var(--color-skeleton-a);
+  --color-skeleton-b: var(--color-skeleton-b);
+}
+
+/* === Dark mode overrides === */
+[data-theme="dark"] {
+  --color-bg: #14161C;
+  --color-surface: #1D2029;
+  --color-border: #2E323D;
+  --color-text: #EDEDEF;
+  --color-text-muted: #9498A3;
+  --color-primary: #4A9EFF;
+  --color-primary-dark: #7AB8FF;
+
+  --color-table-header-bg: #20232C;
+  --color-table-row-hover: #232838;
+  --color-table-border: #2A2D37;
+  --color-kanban-column-bg: #1A1D26;
+  --color-skeleton-a: #262A34;
+  --color-skeleton-b: #1D2029;
+}
+
+/* Charts keep their current (light-tuned) hex colors in both modes for now —
+   they're mid-saturation and still read fine on dark backgrounds, but this
+   is a known simplification: colors were chosen against a light canvas, not
+   verified against dark. Revisit if a chart looks washed out in dark mode. */
+
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: none; color: #C9D6E8; font-family: inherit;
+  font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 8px 10px;
+  border-radius: 6px; text-align: left;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.06); color: white; }
+
+.alert-banner {
+  background: #FDEDEC; color: #B3261E; border: 1px solid #F3C6C2; border-left: 4px solid #B3261E;
+  border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.alert-banner-amount { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+
+[data-theme="dark"] .alert-banner { background: #3A1E1C; border-color: #5C2B27; color: #FF8F87; }
+
+.section-heading { font-size: 15px; font-weight: 700; margin: 28px 0 14px 0; letter-spacing: -0.01em; }

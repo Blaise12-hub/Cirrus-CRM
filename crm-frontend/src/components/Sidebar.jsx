@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut, ShieldCheck,Package } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -53,6 +54,7 @@ export default function Sidebar() {
             <span className="sidebar-user-role">{user.role}</span>
           </div>
         )}
+        <ThemeToggle/>
         <button className="nav-item logout-btn" onClick={handleLogout}>
           <LogOut size={16} /> Log out
         </button>
