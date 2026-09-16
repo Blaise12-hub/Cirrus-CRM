@@ -120,12 +120,12 @@ export default function RepDashboard() {
               <div className="empty-block">No open deals to chart yet.</div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={pipelineData}>
+                <BarChart data={pipelineData} barCategoryGap="35%">
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
                   <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
                   <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
                     {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                   </Bar>
                 </BarChart>

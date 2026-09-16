@@ -148,12 +148,12 @@ export default function TeamDashboard() {
             <div className="dash-panel">
               <div className="panel-title">Pipeline by stage</div>
               <ResponsiveContainer width="100%" height={230}>
-                <BarChart data={pipelineData}>
+                <BarChart data={pipelineData} barCategoryGap="35%">
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
                   <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
                   <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
                     {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                   </Bar>
                 </BarChart>
@@ -193,14 +193,14 @@ export default function TeamDashboard() {
                 <div className="empty-block">No activity logged yet.</div>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={activityByRep}>
+                  <BarChart data={activityByRep} barCategoryGap="35%">
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
                     <XAxis dataKey="rep" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
                     <YAxis allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
                     <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
-                    <Bar dataKey="calls" name="Calls" fill="#0B5CAB" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="calls" name="Calls" fill="#0B5CAB" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                    <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} maxBarSize={48} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
