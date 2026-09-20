@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --color-bg: #F3F2F2;
+  --color-bg: #DFE2E8;
   --color-surface: #FFFFFF;
   --color-border: #D8D8D8;
-  --color-primary: #0B5CAB;
-  --color-primary-dark: #063970;
+  --color-primary: #1160B7;
+  --color-primary-dark: #0A3E7A;
   --color-text: #1A1A1A;
   --color-text-muted: #6B6B6B;
 
@@ -67,7 +67,7 @@ body {
 .crm-root { display: flex; height: 100vh; background: var(--color-bg); }
 
 .sidebar {
-  width: 208px; flex-shrink: 0; background: #16325C; color: white;
+  width: 208px; flex-shrink: 0; background: #002050; color: white;
   display: flex; flex-direction: column; padding: 18px 12px;
 }
 .brand { font-weight: 700; font-size: 15px; padding: 0 10px 20px 10px; letter-spacing: -0.01em; }
@@ -307,7 +307,7 @@ body {
 .field-row .field-label { flex: 1; }
 
 /* ---- Login page ---- */
-.login-root { display: flex; align-items: center; justify-content: center; height: 100vh; background: #16325C; }
+.login-root { display: flex; align-items: center; justify-content: center; height: 100vh; background: #002050; }
 .login-card { background: var(--color-surface); border-radius: 10px; padding: 32px; width: 360px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
 .login-brand { font-size: 18px; font-weight: 700; color: var(--color-text); }
 .login-brand span { color: var(--color-primary); }

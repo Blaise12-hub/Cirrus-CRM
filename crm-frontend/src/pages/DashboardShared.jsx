@@ -3,7 +3,7 @@ import { RadialBarChart, RadialBar, ResponsiveContainer } from "recharts";
 
 // Same accent colors OpportunityDetail.jsx uses for its stage buttons.
 export const STAGE_COLORS = {
-  prospecting: "#8A8D91", qualification: "#5E7CE2", proposal: "#0B5CAB",
+  prospecting: "#8A8D91", qualification: "#5E7CE2", proposal: "#1160B7",
   negotiation: "#B25E09", won: "#2E7D46", lost: "#B3261E",
 };
 export const STAGE_LABELS = {
@@ -11,7 +11,7 @@ export const STAGE_LABELS = {
   negotiation: "Negotiation", won: "Won", lost: "Lost",
 };
 export const LEAD_STATUS_COLORS = {
-  new: "#5E7CE2", contacted: "#0B5CAB", qualified: "#B25E09", converted: "#2E7D46", disqualified: "#B3261E",
+  new: "#5E7CE2", contacted: "#1160B7", qualified: "#B25E09", converted: "#2E7D46", disqualified: "#B3261E",
 };
 
 export const tickStyle = { fontSize: 11.5, fontFamily: "IBM Plex Sans", fill: "#6B6B6B" };
@@ -22,7 +22,7 @@ export const tooltipStyle = {
 };
 
 export function WinRateGauge({ pct }) {
-  const data = [{ name: "win rate", value: pct ?? 0, fill: "#0B5CAB" }];
+  const data = [{ name: "win rate", value: pct ?? 0, fill: "#1160B7" }];
   return (
     <div style={{ position: "relative", height: 160 }}>
       <ResponsiveContainer width="100%" height="100%">

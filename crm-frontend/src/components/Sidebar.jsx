@@ -29,6 +29,7 @@ export default function Sidebar() {
   return (
     <div className="sidebar">
       <div className="brand">Cirrus <span>CRM</span></div>
+      <ThemeToggle/>
       {NAV_ITEMS.map((item) => (
         <NavLink
           key={item.to}
@@ -54,7 +55,7 @@ export default function Sidebar() {
             <span className="sidebar-user-role">{user.role}</span>
           </div>
         )}
-        <ThemeToggle/>
+        
         <button className="nav-item logout-btn" onClick={handleLogout}>
           <LogOut size={16} /> Log out
         </button>

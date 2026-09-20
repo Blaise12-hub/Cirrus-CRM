@@ -175,15 +175,15 @@ export default function TeamDashboard() {
                 <AreaChart data={cumulativeData}>
                   <defs>
                     <linearGradient id="cumFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0B5CAB" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#0B5CAB" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#1160B7" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#1160B7" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
                   <XAxis dataKey="day" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} interval={4} />
                   <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} />
-                  <Area type="monotone" dataKey="cumulative" stroke="#0B5CAB" strokeWidth={2} fill="url(#cumFill)" />
+                  <Area type="monotone" dataKey="cumulative" stroke="#1160B7" strokeWidth={2} fill="url(#cumFill)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -199,7 +199,7 @@ export default function TeamDashboard() {
                     <YAxis allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
                     <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
-                    <Bar dataKey="calls" name="Calls" fill="#0B5CAB" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                    <Bar dataKey="calls" name="Calls" fill="#1160B7" radius={[3, 3, 0, 0]} maxBarSize={48} />
                     <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} maxBarSize={48} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -265,7 +265,7 @@ export default function TeamDashboard() {
                     <XAxis type="number" allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
                     <YAxis type="category" dataKey="lead_source" width={90} tick={tickStyle} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                    <Bar dataKey="count" fill="#0B5CAB" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="count" fill="#1160B7" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
