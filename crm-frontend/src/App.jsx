@@ -1,9 +1,11 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ThemeModeProvider from "./context/ThemeModeProvider";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
 import AccountsList from "./pages/AccountsList";
@@ -12,7 +14,7 @@ import ContactsList from "./pages/ContactsList";
 import ContactDetail from "./pages/ContactDetail";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import Leads from "./pages/Leads";
-import Users  from "./pages/Users";
+import Users from "./pages/Users";
 import Products from "./pages/Products";
 
 function AppLayout({ children }) {
@@ -26,42 +28,47 @@ function AppLayout({ children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+    <ThemeModeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
 
-          <Route path="/" element={
-            <ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/pipeline" element={
-            <ProtectedRoute><AppLayout><Pipeline /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/accounts" element={
-            <ProtectedRoute><AppLayout><AccountsList /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/accounts/:id" element={
-            <ProtectedRoute><AppLayout><AccountDetail /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/contacts" element={
-            <ProtectedRoute><AppLayout><ContactsList /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/contacts/:id" element={
-            <ProtectedRoute><AppLayout><ContactDetail /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/opportunities/:id" element={
-            <ProtectedRoute><AppLayout><OpportunityDetail /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/leads" element={
-            <ProtectedRoute><AppLayout><Leads /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/users" element={
-            <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
-          } />
-          <Route path="/products" element={
-            <ProtectedRoute roles={['admin','manager']}><Products /></ProtectedRoute>} />
-        </Routes>
-      </BrowserRouter>
-     </AuthProvider>
+            <Route path="/" element={
+              <ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/pipeline" element={
+              <ProtectedRoute><AppLayout><Pipeline /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/accounts" element={
+              <ProtectedRoute><AppLayout><AccountsList /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/accounts/:id" element={
+              <ProtectedRoute><AppLayout><AccountDetail /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/contacts" element={
+              <ProtectedRoute><AppLayout><ContactsList /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/contacts/:id" element={
+              <ProtectedRoute><AppLayout><ContactDetail /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/opportunities/:id" element={
+              <ProtectedRoute><AppLayout><OpportunityDetail /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/leads" element={
+              <ProtectedRoute><AppLayout><Leads /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/users" element={
+              <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
+            } />
+            {/* was missing <AppLayout> here — Products rendered with no sidebar */}
+            <Route path="/products" element={
+              <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Products /></AppLayout></ProtectedRoute>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeModeProvider>
   );
 }

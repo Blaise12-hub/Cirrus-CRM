@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Modal, Field, ModalActions } from "./Modal";
+import { TextField, MenuItem, Alert, Box } from "@mui/material";
+import { Modal, ModalActions, FieldRow } from "./Modal";
 import { opportunitiesApi } from "../api/resources";
 
 const STAGES = [
@@ -11,9 +12,6 @@ const STAGES = [
   { value: "lost", label: "Lost" },
 ];
 
-// accounts: full account list (account_id NOT NULL on opportunities, so required)
-// contacts: full contact list — filtered client-side to the selected account
-// defaultAccountId: optional, pass this when opening from an AccountDetail page
 export default function NewOpportunityModal({ accounts, contacts, defaultAccountId, onClose, onCreated }) {
   const [form, setForm] = useState({
     name: "",
@@ -30,10 +28,7 @@ export default function NewOpportunityModal({ accounts, contacts, defaultAccount
   const set = (field) => (e) => {
     const value = e.target.value;
     setForm((prev) => {
-      // switching account invalidates any previously chosen contact from a different account
-      if (field === "account_id") {
-        return { ...prev, account_id: value, contact_id: "" };
-      }
+      if (field === "account_id") return { ...prev, account_id: value, contact_id: "" };
       return { ...prev, [field]: value };
     });
   };
@@ -74,52 +69,41 @@ export default function NewOpportunityModal({ accounts, contacts, defaultAccount
 
   return (
     <Modal title="New opportunity" onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <Field label="Opportunity name">
-          <input value={form.name} onChange={set("name")} autoFocus placeholder="e.g. Rusizi Textiles — Q3 renewal" />
-        </Field>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
 
-        <div className="field-row">
-          <Field label="Account">
-            <select value={form.account_id} onChange={set("account_id")} disabled={!!defaultAccountId}>
-              <option value="">Select account…</option>
+          <TextField label="Opportunity name" value={form.name} onChange={set("name")} autoFocus placeholder="e.g. Rusizi Textiles — Q3 renewal" />
+
+          <FieldRow>
+            <TextField select label="Account" value={form.account_id} onChange={set("account_id")} disabled={!!defaultAccountId}>
+              <MenuItem value="">Select account…</MenuItem>
               {accounts.map((a) => (
-                <option key={a.account_id} value={a.account_id}>{a.account_name}</option>
+                <MenuItem key={a.account_id} value={a.account_id}>{a.account_name}</MenuItem>
               ))}
-            </select>
-          </Field>
-          <Field label="Contact">
-            <select value={form.contact_id} onChange={set("contact_id")} disabled={!form.account_id}>
-              <option value="">No contact</option>
+            </TextField>
+            <TextField select label="Contact" value={form.contact_id} onChange={set("contact_id")} disabled={!form.account_id}>
+              <MenuItem value="">No contact</MenuItem>
               {accountContacts.map((c) => (
-                <option key={c.contact_id} value={c.contact_id}>{c.first_name} {c.last_name}</option>
+                <MenuItem key={c.contact_id} value={c.contact_id}>{c.first_name} {c.last_name}</MenuItem>
               ))}
-            </select>
-          </Field>
-        </div>
+            </TextField>
+          </FieldRow>
 
-        <div className="field-row">
-          <Field label="Stage">
-            <select value={form.stage} onChange={set("stage")}>
+          <FieldRow>
+            <TextField select label="Stage" value={form.stage} onChange={set("stage")}>
               {STAGES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+                <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
               ))}
-            </select>
-          </Field>
-          <Field label="Amount">
-            <input type="number" min="0" step="0.01" value={form.amount} onChange={set("amount")} placeholder="0.00" />
-          </Field>
-        </div>
+            </TextField>
+            <TextField label="Amount" type="number" inputProps={{ min: 0, step: 0.01 }} value={form.amount} onChange={set("amount")} placeholder="0.00" />
+          </FieldRow>
 
-        <div className="field-row">
-          <Field label="Close date">
-            <input type="date" value={form.close_date} onChange={set("close_date")} />
-          </Field>
-          <Field label="Probability (%)">
-            <input type="number" min="0" max="100" value={form.probability} onChange={set("probability")} placeholder="0–100" />
-          </Field>
-        </div>
+          <FieldRow>
+            <TextField label="Close date" type="date" InputLabelProps={{ shrink: true }} value={form.close_date} onChange={set("close_date")} />
+            <TextField label="Probability (%)" type="number" inputProps={{ min: 0, max: 100 }} value={form.probability} onChange={set("probability")} placeholder="0–100" />
+          </FieldRow>
+        </Box>
 
         <ModalActions onCancel={onClose} submitLabel="Create opportunity" submitting={submitting} />
       </form>

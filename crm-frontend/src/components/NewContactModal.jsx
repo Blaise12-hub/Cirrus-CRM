@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Field, ModalActions } from "./Modal";
+import { TextField, MenuItem, Alert, Box } from "@mui/material";
+import { Modal, ModalActions, FieldRow } from "./Modal";
 import { contactsApi } from "../api/resources";
 
 export default function NewContactModal({ accounts, onClose, onCreated }) {
@@ -22,7 +23,7 @@ export default function NewContactModal({ accounts, onClose, onCreated }) {
     try {
       const created = await contactsApi.create({
         ...form,
-        account_id: form.account_id || null, // contacts don't require an account (see schema)
+        account_id: form.account_id || null,
       });
       onCreated(created);
     } catch (err) {
@@ -33,35 +34,31 @@ export default function NewContactModal({ accounts, onClose, onCreated }) {
 
   return (
     <Modal title="New contact" onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <div className="field-row">
-          <Field label="First name">
-            <input value={form.first_name} onChange={set("first_name")} autoFocus />
-          </Field>
-          <Field label="Last name">
-            <input value={form.last_name} onChange={set("last_name")} />
-          </Field>
-        </div>
-        <Field label="Account">
-          <select value={form.account_id} onChange={set("account_id")}>
-            <option value="">No account (standalone contact)</option>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <FieldRow>
+            <TextField label="First name" value={form.first_name} onChange={set("first_name")} autoFocus />
+            <TextField label="Last name" value={form.last_name} onChange={set("last_name")} />
+          </FieldRow>
+
+
+          <TextField select label="Account" value={form.account_id} onChange={set("account_id")}>
+            <MenuItem value="">No account (standalone contact)</MenuItem>
             {accounts.map((a) => (
-              <option key={a.account_id} value={a.account_id}>{a.account_name}</option>
+              <MenuItem key={a.account_id} value={a.account_id}>{a.account_name}</MenuItem>
             ))}
-          </select>
-        </Field>
-        <Field label="Job title">
-          <input value={form.job_title} onChange={set("job_title")} placeholder="e.g. Operations Manager" />
-        </Field>
-        <div className="field-row">
-          <Field label="Email">
-            <input type="email" value={form.email} onChange={set("email")} />
-          </Field>
-          <Field label="Phone">
-            <input value={form.phone} onChange={set("phone")} />
-          </Field>
-        </div>
+          </TextField>
+
+          <TextField label="Job title" value={form.job_title} onChange={set("job_title")} placeholder="e.g. Operations Manager" />
+
+          <FieldRow>
+            <TextField label="Email" type="email" value={form.email} onChange={set("email")} />
+            <TextField label="Phone" value={form.phone} onChange={set("phone")} />
+          </FieldRow>
+        </Box>
+
         <ModalActions onCancel={onClose} submitLabel="Create contact" submitting={submitting} />
       </form>
     </Modal>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Modal, Field, ModalActions } from "./Modal";
+import { Modal, ModalActions, FieldRow } from "./Modal";
+import { TextField, Box, Alert } from "@mui/material";
 import { accountsApi } from "../api/resources";
 
 export default function NewAccountModal({ onClose, onCreated }) {
@@ -28,25 +29,33 @@ export default function NewAccountModal({ onClose, onCreated }) {
 
   return (
     <Modal title="New account" onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <Field label="Account name">
-          <input value={form.account_name} onChange={set("account_name")} placeholder="e.g. Kivu Logistics" autoFocus />
-        </Field>
-        <Field label="Industry">
-          <input value={form.industry} onChange={set("industry")} placeholder="e.g. Transportation" />
-        </Field>
-        <div className="field-row">
-          <Field label="Phone">
-            <input value={form.phone} onChange={set("phone")} placeholder="+250 788 000 000" />
-          </Field>
-          <Field label="Website">
-            <input value={form.website} onChange={set("website")} placeholder="example.com" />
-          </Field>
-        </div>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <TextField
+            label="Account name"
+            value={form.account_name}
+            onChange={set("account_name")}
+            placeholder="e.g. Kivu Logistics"
+            autoFocus
+          />
+
+          <TextField
+            label="Industry"
+            value={form.industry}
+            onChange={set("industry")}
+            placeholder="e.g. Transportation"
+          />
+
+          <FieldRow>
+            <TextField label="Phone" value={form.phone} onChange={set("phone")} placeholder="+250 788 000 000" />
+            <TextField label="Website" value={form.website} onChange={set("website")} placeholder="example.com" />
+          </FieldRow>
+        </Box>
+
         <ModalActions onCancel={onClose} submitLabel="Create account" submitting={submitting} />
       </form>
     </Modal>
   );
 }
-  

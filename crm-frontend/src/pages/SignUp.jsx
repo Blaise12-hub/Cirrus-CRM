@@ -1,19 +1,21 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Box, TextField, Button, Alert, Typography } from "@mui/material";
 import { authApi } from "../api/resources";
 import { useAuth } from "../context/AuthContext";
 
-// Reuses .login-* classes from index.css so this looks identical in style
-// to your existing Login page — same card, same form language.
-// ASSUMPTION flagged: authApi.register(data) and its exact field names
-// (first_name/last_name/email/password) — verify against auth.routes.js.
-// No role field is submitted here on purpose (see chat note on why).
+// authApi.register(data) itself is still an assumption (haven't seen
+// auth.routes.js or api/resources.js) — but the login-after-register flow
+// is now confirmed correct: it reuses the exact same login(email, password)
+// your real Login.jsx uses, rather than guessing at a different shape.
+// No role field is sent — see chat note on why a public signup form must
+// not let someone pick their own role.
 export default function SignUp() {
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { login } = useAuth(); // ASSUMPTION: AuthContext exposes a login(user, token) or similar to log the new user in immediately after registering — adjust to match your actual context shape
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -31,71 +33,52 @@ export default function SignUp() {
       setError("Password must be at least 8 characters");
       return;
     }
-    setSubmitting(true);
+    setLoading(true);
     setError("");
     try {
-      const result = await authApi.register({
+      await authApi.register({
         first_name: form.first_name,
         last_name: form.last_name,
         email: form.email,
         password: form.password,
       });
-      // If your register endpoint returns a token + user (like login does),
-      // log them straight in. If it doesn't, redirect to /login instead —
-      // swap the two lines below depending on what your backend actually does.
-      if (result?.token) {
-        login(result.user, result.token);
-        navigate("/");
-      } else {
-        navigate("/login");
-      }
+      // Reuses the same login() your Login.jsx uses — same credentials,
+      // same auth flow, no separate token-handling logic to get wrong.
+      await login(form.email, form.password);
+      navigate("/", { replace: true });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Registration failed");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-root">
-      <div className="login-card">
-        <div className="login-brand">Cirrus <span>CRM</span></div>
-        <div className="login-sub">Create your account</div>
+    <Box className="login-root">
+      <Box className="login-card">
+        <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+          Cirrus <Box component="span" sx={{ color: "primary.main" }}>CRM</Box>
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2.5 }}>Create your account</Typography>
 
-        {error && <div className="login-error">{error}</div>}
+        <Box component="form" onSubmit={submit} sx={{ display: "flex", flexDirection: "column", gap: 1.75 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <TextField label="First name" value={form.first_name} onChange={set("first_name")} autoFocus />
+            <TextField label="Last name" value={form.last_name} onChange={set("last_name")} />
+          </Box>
+          <TextField label="Email" type="email" value={form.email} onChange={set("email")} />
+          <TextField label="Password" type="password" value={form.password} onChange={set("password")} />
+          <TextField label="Confirm password" type="password" value={form.confirm} onChange={set("confirm")} />
+          <Button type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 0.5 }}>
+            {loading ? "Creating account…" : "Create account"}
+          </Button>
+        </Box>
 
-        <form className="login-form" onSubmit={submit}>
-          <div className="field-row">
-            <label>
-              First name
-              <input value={form.first_name} onChange={set("first_name")} autoFocus />
-            </label>
-            <label>
-              Last name
-              <input value={form.last_name} onChange={set("last_name")} />
-            </label>
-          </div>
-          <label>
-            Email
-            <input type="email" value={form.email} onChange={set("email")} />
-          </label>
-          <label>
-            Password
-            <input type="password" value={form.password} onChange={set("password")} />
-          </label>
-          <label>
-            Confirm password
-            <input type="password" value={form.confirm} onChange={set("confirm")} />
-          </label>
-          <button type="submit" className="btn-primary login-submit" disabled={submitting}>
-            {submitting ? "Creating account…" : "Create account"}
-          </button>
-        </form>
-
-        <div className="login-hint">
-          Already have an account? <Link to="/login" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Log in</Link>
-        </div>
-      </div>
-    </div>
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2.5 }}>
+          Already have an account? <Link to="/login" style={{ color: "inherit", fontWeight: 600, textDecoration: "underline" }}>Log in</Link>
+        </Typography>
+      </Box>
+    </Box>
   );
 }

@@ -1,43 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, ArrowRightCircle } from "lucide-react";
+import { Box, Typography, TextField, InputAdornment, Button, Checkbox, FormControlLabel, Alert } from "@mui/material";
+import { Search, ArrowRightCircle } from "lucide-react";
 import { leadsApi } from "../api/resources";
 import { DataTable } from "../components/Shared";
 import { LeadStatusPill } from "../components/Badges";
-import NewLeadModal from "../components/NewLeadModal";
+import { Modal } from "../components/Modal";
 
 function ConvertLeadModal({ lead, onClose, onConfirm, saving, error }) {
   const [createAccount, setCreateAccount] = useState(!!lead.company_name);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <span>Convert lead</span>
-          <button className="icon-btn" onClick={onClose}><X size={16} /></button>
-        </div>
-        <div className="modal-body">
-          <p className="convert-summary">
-            This will create a new contact for <strong>{lead.first_name} {lead.last_name}</strong>
-            {createAccount && lead.company_name && <> and a new account for <strong>{lead.company_name}</strong></>}.
-            The lead will be marked as converted.
-          </p>
-          {lead.company_name && (
-            <label className="checkbox-row">
-              <input type="checkbox" checked={createAccount} onChange={(e) => setCreateAccount(e.target.checked)} />
-              Create a new account from "{lead.company_name}"
-            </label>
-          )}
-          {error && <div className="form-error">{error}</div>}
-          <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="button" className="btn-primary" onClick={() => onConfirm(createAccount)} disabled={saving}>
-              {saving ? "Converting…" : "Convert lead"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Modal title="Convert lead" onClose={onClose}>
+      <Typography variant="body2" sx={{ mb: 1.5 }}>
+        This will create a new contact for <strong>{lead.first_name} {lead.last_name}</strong>
+        {createAccount && lead.company_name && <> and a new account for <strong>{lead.company_name}</strong></>}.
+        The lead will be marked as converted.
+      </Typography>
+
+      {lead.company_name && (
+        <FormControlLabel
+          control={<Checkbox size="small" checked={createAccount} onChange={(e) => setCreateAccount(e.target.checked)} />}
+          label={`Create a new account from "${lead.company_name}"`}
+          sx={{ mb: 1 }}
+        />
+      )}
+
+      {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}>
+        <Button variant="outlined" onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button variant="contained" onClick={() => onConfirm(createAccount)} disabled={saving}>
+          {saving ? "Converting…" : "Convert lead"}
+        </Button>
+      </Box>
+    </Modal>
   );
 }
 
@@ -50,7 +47,6 @@ export default function Leads() {
   const [convertingLead, setConvertingLead] = useState(null);
   const [converting, setConverting] = useState(false);
   const [convertError, setConvertError] = useState("");
-  const [showNewLead, setShowNewLead] = useState(false);
 
   useEffect(() => {
     leadsApi.list()
@@ -77,16 +73,20 @@ export default function Leads() {
   const rows = leads.filter((l) => `${l.first_name} ${l.last_name}`.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="view">
-      <div className="pb-header">
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Leads</h1>
-        <div className="search-box">
-          <Search size={14} />
-          <input placeholder="Search leads" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
-      </div>
+    <Box className="view">
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5, gap: 1.5, flexWrap: "wrap" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Leads</Typography>
+        <TextField
+          size="small"
+          placeholder="Search leads"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><Search size={14} /></InputAdornment> }}
+          sx={{ width: 220 }}
+        />
+      </Box>
 
-      {error && <div className="form-error">{error}</div>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <DataTable
         loading={loading}
@@ -101,11 +101,16 @@ export default function Leads() {
             label: "",
             render: (r) =>
               r.status === "converted" ? (
-                <span className="converted-tag">Converted</span>
+                <Typography variant="caption" color="text.secondary" fontStyle="italic">Converted</Typography>
               ) : (
-                <button className="btn-convert" onClick={(e) => { e.stopPropagation(); setConvertingLead(r); setConvertError(""); }}>
-                  <ArrowRightCircle size={13} /> Convert
-                </button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<ArrowRightCircle size={13} />}
+                  onClick={(e) => { e.stopPropagation(); setConvertingLead(r); setConvertError(""); }}
+                >
+                  Convert
+                </Button>
               ),
           },
         ]}
@@ -121,6 +126,6 @@ export default function Leads() {
           error={convertError}
         />
       )}
-    </div>
+    </Box>
   );
 }

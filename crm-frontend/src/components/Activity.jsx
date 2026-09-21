@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Box, Typography, TextField, MenuItem, Button, Alert } from "@mui/material";
 import { Plus, CheckCircle2, Circle } from "lucide-react";
 import { activitiesApi } from "../api/resources";
 import { shortDate, todayISO } from "./Shared";
@@ -13,25 +14,27 @@ function icon(type) {
 export function ActivityTimeline({ activities, loading }) {
   if (loading) return <TimelineSkeleton rows={3} />;
   if (!activities || activities.length === 0) {
-    return <div className="empty-block">No activity logged yet.</div>;
+    return <Typography variant="body2" color="text.secondary">No activity logged yet.</Typography>;
   }
   return (
-    <div className="timeline">
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       {activities.map((a) => (
-        <div key={a.activity_id} className="timeline-row">
-          <div className={`timeline-status ${a.status === "completed" ? "done" : ""}`}>
+        <Box key={a.activity_id} sx={{ display: "flex", gap: 1.25 }}>
+          <Box sx={{ color: a.status === "completed" ? "success.main" : "text.disabled", mt: 0.25, flexShrink: 0 }}>
             {a.status === "completed" ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-          </div>
-          <div className="timeline-content">
-            <div className="timeline-top">
-              <span className="timeline-subject">{icon(a.type)} {a.subject}</span>
-              <span className="timeline-date">{shortDate(a.due_date)}</span>
-            </div>
-            <div className="timeline-meta">{a.type}</div>
-          </div>
-        </div>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>{icon(a.type)} {a.subject}</Typography>
+              <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }} color="text.secondary">
+                {shortDate(a.due_date)}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: "capitalize" }}>{a.type}</Typography>
+          </Box>
+        </Box>
       ))}
-    </div>
+    </Box>
   );
 }
 
@@ -71,32 +74,29 @@ export function ActivityLogForm({ parentType, parentId, onCreated }) {
 
   if (!open) {
     return (
-      <button className="btn-ghost-add" onClick={() => setOpen(true)}>
-        <Plus size={13} /> Log activity
-      </button>
+      <Button size="small" startIcon={<Plus size={13} />} onClick={() => setOpen(true)}>
+        Log activity
+      </Button>
     );
   }
 
   return (
-    <form className="activity-log-form" onSubmit={submit}>
-      <div className="alf-row">
-        <select value={type} onChange={(e) => setType(e.target.value)}>
-          {ACTIVITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <input
-          type="text"
-          placeholder="What happened or what's planned?"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          autoFocus
+    <Box component="form" onSubmit={submit} sx={{ bgcolor: "action.hover", border: 1, borderColor: "divider", borderRadius: 1.5, p: 1.5, mb: 1.5 }}>
+      <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+        <TextField select size="small" value={type} onChange={(e) => setType(e.target.value)} sx={{ flex: "0 0 110px" }}>
+          {ACTIVITY_TYPES.map((t) => <MenuItem key={t} value={t} sx={{ textTransform: "capitalize" }}>{t}</MenuItem>)}
+        </TextField>
+        <TextField
+          size="small" placeholder="What happened or what's planned?"
+          value={subject} onChange={(e) => setSubject(e.target.value)} autoFocus sx={{ flex: 1 }}
         />
-        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-      </div>
-      {error && <div className="form-error">{error}</div>}
-      <div className="alf-actions">
-        <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
-        <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Saving…" : "Save"}</button>
-      </div>
-    </form>
+        <TextField type="date" size="small" value={dueDate} onChange={(e) => setDueDate(e.target.value)} sx={{ flex: "0 0 140px" }} />
+      </Box>
+      {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+        <Button size="small" variant="outlined" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="small" type="submit" variant="contained" disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+      </Box>
+    </Box>
   );
 }

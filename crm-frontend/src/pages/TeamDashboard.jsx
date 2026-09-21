@@ -4,11 +4,51 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from "recharts";
+import {
+  Box, Card, CardContent, Typography, Alert,
+  Table, TableHead, TableBody, TableRow, TableCell,
+} from "@mui/material";
 import { opportunitiesApi, leadsApi, dashboardApi } from "../api/resources";
 import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
 import { STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, tickStyle, monoTickStyle, tooltipStyle, WinRateGauge } from "./dashboardShared";
+
+// Plain CSS Grid via sx — see RepDashboard.jsx for why (MUI Grid v5 vs v6+ API split).
+const statGridSx = { display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1.75, mb: 3 };
+const twoColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 };
+
+function StatCard({ label, value, sub, color }) {
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="caption" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }} color="text.secondary">
+          {label}
+        </Typography>
+        <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 24, fontWeight: 600, mt: 0.5, color }}>
+          {value}
+        </Typography>
+        {sub && <Typography variant="caption" color="text.secondary">{sub}</Typography>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniRow({ onClick, primary, secondary }) {
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        p: 1, fontSize: 13, cursor: "pointer", borderRadius: 1,
+        "&:hover": { bgcolor: "action.hover" },
+      }}
+    >
+      {primary}
+      {secondary}
+    </Box>
+  );
+}
 
 export default function TeamDashboard() {
   const { user } = useAuth();
@@ -40,7 +80,7 @@ export default function TeamDashboard() {
   }, []);
 
   if (loading) return <DetailSkeleton />;
-  if (error) return <div className="view"><div className="form-error">{error}</div></div>;
+  if (error) return <Box className="view"><Alert severity="error">{error}</Alert></Box>;
 
   const open = opportunities.filter((o) => o.stage !== "won" && o.stage !== "lost");
   const openTotal = open.reduce((s, o) => s + Number(o.amount), 0);
@@ -61,218 +101,225 @@ export default function TeamDashboard() {
   const overdueDeals = summary?.overdue_deals;
 
   return (
-    <div className="view">
-      <h1 className="page-title">Good morning, {user?.first_name || ""}</h1>
+    <Box className="view">
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2.5 }}>Good morning, {user?.first_name || ""}</Typography>
 
-      <div className="stat-grid">
-        <div className="stat-card">
-          <div className="stat-label">Open pipeline</div>
-          <div className="stat-value">{money(openTotal)}</div>
-          <div className="stat-sub">{open.length} open deals</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Won this period</div>
-          <div className="stat-value" style={{ color: "#2E7D46" }}>{money(wonTotal)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Total deals</div>
-          <div className="stat-value">{opportunities.length}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">New leads</div>
-          <div className="stat-value">{newLeads.length}</div>
-        </div>
-      </div>
+      <Box sx={statGridSx}>
+        <StatCard label="Open pipeline" value={money(openTotal)} sub={`${open.length} open deals`} />
+        <StatCard label="Won this period" value={money(wonTotal)} color="success.main" />
+        <StatCard label="Total deals" value={opportunities.length} />
+        <StatCard label="New leads" value={newLeads.length} />
+      </Box>
 
       {overdueDeals && overdueDeals.count > 0 && (
-        <div className="alert-banner">
+        <Alert severity="error" sx={{ mb: 2.5 }}>
           <strong>{overdueDeals.count}</strong> open deal{overdueDeals.count !== 1 ? "s" : ""} past their close date
-          <span className="alert-banner-amount">{money(overdueDeals.total_amount)} at stake</span>
-        </div>
+          {" — "}
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>{money(overdueDeals.total_amount)} at stake</span>
+        </Alert>
       )}
 
-      <div className="dash-columns">
-        <div className="dash-panel">
-          <div className="panel-title">Deals closing soon</div>
-          <div className="mini-list">
-            {open.length === 0 && <div className="empty-block">No open deals.</div>}
+      <Box sx={twoColGridSx}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Deals closing soon</Typography>
+            {open.length === 0 && <Typography variant="caption" color="text.secondary">No open deals.</Typography>}
             {open.slice(0, 6).map((o) => (
-              <div key={o.opportunity_id} className="mini-row" onClick={() => navigate(`/opportunities/${o.opportunity_id}`)}>
-                <span>{o.name}</span>
-                <span className="mini-amount">{money(o.amount)}</span>
-              </div>
+              <MiniRow
+                key={o.opportunity_id}
+                onClick={() => navigate(`/opportunities/${o.opportunity_id}`)}
+                primary={<span>{o.name}</span>}
+                secondary={<span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, fontSize: 12.5 }}>{money(o.amount)}</span>}
+              />
             ))}
-          </div>
-        </div>
-        <div className="dash-panel">
-          <div className="panel-title">New leads</div>
-          <div className="mini-list">
-            {newLeads.length === 0 && <div className="empty-block">No new leads.</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>New leads</Typography>
+            {newLeads.length === 0 && <Typography variant="caption" color="text.secondary">No new leads.</Typography>}
             {newLeads.slice(0, 6).map((l) => (
-              <div key={l.lead_id} className="mini-row" onClick={() => navigate("/leads")}>
-                <span>{l.first_name} {l.last_name}</span>
-                <span className="mini-sub">{l.company_name}</span>
-              </div>
+              <MiniRow
+                key={l.lead_id}
+                onClick={() => navigate("/leads")}
+                primary={<span>{l.first_name} {l.last_name}</span>}
+                secondary={<Typography variant="caption" color="text.secondary">{l.company_name}</Typography>}
+              />
             ))}
-          </div>
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      </Box>
 
       {summary && (
         <>
-          <h2 className="section-heading">Pipeline & Activity</h2>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mt: 3.5, mb: 1.75 }}>Pipeline & Activity</Typography>
 
-          <div className="stat-grid">
-            <div className="stat-card">
-              <div className="stat-label">Weighted pipeline</div>
-              <div className="stat-value">{money(summary.weighted_value)}</div>
-              <div className="stat-sub">amount × probability</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Overdue activities</div>
-              <div className="stat-value" style={overdue > 0 ? { color: "#B3261E" } : undefined}>{overdue}</div>
-              <div className="stat-sub">{summary.activity_load.due_today} due today</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Due next 7 days</div>
-              <div className="stat-value">{summary.activity_load.upcoming_7d}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Recent deals value</div>
-              <div className="stat-value">{money(summary.recent_deals.reduce((s, d) => s + Number(d.amount || 0), 0))}</div>
-              <div className="stat-sub">last {summary.recent_deals.length} deals</div>
-            </div>
-          </div>
+          <Box sx={statGridSx}>
+            <StatCard label="Weighted pipeline" value={money(summary.weighted_value)} sub="amount × probability" />
+            <StatCard
+              label="Overdue activities" value={overdue}
+              sub={`${summary.activity_load.due_today} due today`}
+              color={overdue > 0 ? "error.main" : undefined}
+            />
+            <StatCard label="Due next 7 days" value={summary.activity_load.upcoming_7d} />
+            <StatCard
+              label="Recent deals value"
+              value={money(summary.recent_deals.reduce((s, d) => s + Number(d.amount || 0), 0))}
+              sub={`last ${summary.recent_deals.length} deals`}
+            />
+          </Box>
 
-          <div className="dash-columns">
-            <div className="dash-panel">
-              <div className="panel-title">Pipeline by stage</div>
-              <ResponsiveContainer width="100%" height={230}>
-                <BarChart data={pipelineData} barCategoryGap="35%">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                  <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
-                  <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                  <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                    {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="dash-panel">
-              <div className="panel-title">Win rate</div>
-              <WinRateGauge pct={summary.win_rate.win_rate_pct} />
-              <div className="empty-block" style={{ textAlign: "center", padding: 0 }}>
-                {summary.win_rate.won} won / {summary.win_rate.lost} lost
-              </div>
-            </div>
-          </div>
-
-          <div className="dash-columns" style={{ marginTop: 16 }}>
-            <div className="dash-panel">
-              <div className="panel-title">Cumulative sales — last 30 days</div>
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={cumulativeData}>
-                  <defs>
-                    <linearGradient id="cumFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1160B7" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#1160B7" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                  <XAxis dataKey="day" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} interval={4} />
-                  <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                  <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} />
-                  <Area type="monotone" dataKey="cumulative" stroke="#1160B7" strokeWidth={2} fill="url(#cumFill)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="dash-panel">
-              <div className="panel-title">SDR activity — calls vs meetings</div>
-              {activityByRep.length === 0 ? (
-                <div className="empty-block">No activity logged yet.</div>
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={activityByRep} barCategoryGap="35%">
+          <Box sx={twoColGridSx}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Pipeline by stage</Typography>
+                <ResponsiveContainer width="100%" height={230}>
+                  <BarChart data={pipelineData} barCategoryGap="35%">
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                    <XAxis dataKey="rep" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                    <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
-                    <Bar dataKey="calls" name="Calls" fill="#1160B7" radius={[3, 3, 0, 0]} maxBarSize={48} />
-                    <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                    <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
+                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
+                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
+                      {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Win rate</Typography>
+                <WinRateGauge pct={summary.win_rate.win_rate_pct} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", textAlign: "center" }}>
+                  {summary.win_rate.won} won / {summary.win_rate.lost} lost
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
 
-          <div className="dash-columns" style={{ marginTop: 16 }}>
-            <div className="dash-panel">
-              <div className="panel-title">Recent deals</div>
-              {summary.recent_deals.length === 0 ? (
-                <div className="empty-block">No deals yet.</div>
-              ) : (
-                <table className="data-table">
-                  <thead><tr><th>Deal</th><th>Account</th><th>Amount</th></tr></thead>
-                  <tbody>
-                    {summary.recent_deals.map((d) => (
-                      <tr key={d.opportunity_id} onClick={() => navigate(`/opportunities/${d.opportunity_id}`)}>
-                        <td>{d.name}</td><td>{d.account_name}</td><td>{money(d.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-            <div className="dash-panel">
-              <div className="panel-title">Deals closed this month — by rep</div>
-              {summary.rep_leaderboard.length === 0 ? (
-                <div className="empty-block">No deals closed this month yet.</div>
-              ) : (
-                <table className="data-table">
-                  <thead><tr><th>Rep</th><th>Deals</th><th>Value</th></tr></thead>
-                  <tbody>
-                    {summary.rep_leaderboard.map((r) => (
-                      <tr key={r.owner_id}>
-                        <td>{r.first_name} {r.last_name}</td><td>{r.deals}</td><td>{money(r.total_amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          <div className="dash-panel" style={{ marginTop: 16 }}>
-            <div className="panel-title">Leads by status & source</div>
-            <div className="dash-columns" style={{ marginTop: 0 }}>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={leadsStatusData} dataKey="value" nameKey="name" outerRadius={75} label={{ fontSize: 11, fontFamily: "IBM Plex Sans" }}>
-                    {leadsStatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                  </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
-                </PieChart>
-              </ResponsiveContainer>
-              {leadsSourceData.length === 0 ? (
-                <div className="empty-block">No lead source data yet.</div>
-              ) : (
+          <Box sx={{ ...twoColGridSx, mt: 0.25 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Cumulative sales — last 30 days</Typography>
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={leadsSourceData} layout="vertical" margin={{ left: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEEEEE" />
-                    <XAxis type="number" allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                    <YAxis type="category" dataKey="lead_source" width={90} tick={tickStyle} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                    <Bar dataKey="count" fill="#1160B7" radius={[0, 4, 4, 0]} />
-                  </BarChart>
+                  <AreaChart data={cumulativeData}>
+                    <defs>
+                      <linearGradient id="cumFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#1160B7" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#1160B7" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
+                    <XAxis dataKey="day" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} interval={4} />
+                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} />
+                    <Area type="monotone" dataKey="cumulative" stroke="#1160B7" strokeWidth={2} fill="url(#cumFill)" />
+                  </AreaChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>SDR activity — calls vs meetings</Typography>
+                {activityByRep.length === 0 ? (
+                  <Typography variant="caption" color="text.secondary">No activity logged yet.</Typography>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={activityByRep} barCategoryGap="35%">
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
+                      <XAxis dataKey="rep" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
+                      <YAxis allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
+                      <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
+                      <Bar dataKey="calls" name="Calls" fill="#1160B7" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                      <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          <Box sx={{ ...twoColGridSx, mt: 0.25 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Recent deals</Typography>
+                {summary.recent_deals.length === 0 ? (
+                  <Typography variant="caption" color="text.secondary">No deals yet.</Typography>
+                ) : (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow><TableCell>Deal</TableCell><TableCell>Account</TableCell><TableCell>Amount</TableCell></TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {summary.recent_deals.map((d) => (
+                        <TableRow key={d.opportunity_id} hover onClick={() => navigate(`/opportunities/${d.opportunity_id}`)} sx={{ cursor: "pointer" }}>
+                          <TableCell>{d.name}</TableCell>
+                          <TableCell>{d.account_name}</TableCell>
+                          <TableCell>{money(d.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Deals closed this month — by rep</Typography>
+                {summary.rep_leaderboard.length === 0 ? (
+                  <Typography variant="caption" color="text.secondary">No deals closed this month yet.</Typography>
+                ) : (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow><TableCell>Rep</TableCell><TableCell>Deals</TableCell><TableCell>Value</TableCell></TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {summary.rep_leaderboard.map((r) => (
+                        <TableRow key={r.owner_id}>
+                          <TableCell>{r.first_name} {r.last_name}</TableCell>
+                          <TableCell>{r.deals}</TableCell>
+                          <TableCell>{money(r.total_amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          <Card sx={{ mt: 2 }}>
+            <CardContent>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Leads by status & source</Typography>
+              <Box sx={twoColGridSx}>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie data={leadsStatusData} dataKey="value" nameKey="name" outerRadius={75} label={{ fontSize: 11, fontFamily: "IBM Plex Sans" }}>
+                      {leadsStatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                {leadsSourceData.length === 0 ? (
+                  <Typography variant="caption" color="text.secondary">No lead source data yet.</Typography>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={leadsSourceData} layout="vertical" margin={{ left: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEEEEE" />
+                      <XAxis type="number" allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="lead_source" width={90} tick={tickStyle} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
+                      <Bar dataKey="count" fill="#1160B7" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </>
       )}
-    </div>
+    </Box>
   );
 }

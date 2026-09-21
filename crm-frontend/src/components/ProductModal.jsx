@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Modal, Field, ModalActions } from "./Modal";
+import { TextField, Alert, Box } from "@mui/material";
+import { Modal, ModalActions } from "./Modal";
 import { productsApi } from "../api/resources";
 
-// Pass `product` for edit mode, omit for create mode.
 export default function ProductModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
   const [form, setForm] = useState({
@@ -41,17 +41,13 @@ export default function ProductModal({ product, onClose, onSaved }) {
 
   return (
     <Modal title={isEdit ? "Edit product" : "New product"} onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <Field label="Product name">
-          <input value={form.name} onChange={set("name")} autoFocus placeholder="e.g. CRM Pro License" />
-        </Field>
-        <Field label="Price">
-          <input type="number" min="0" step="0.01" value={form.price} onChange={set("price")} placeholder="0.00" />
-        </Field>
-        <Field label="Description">
-          <input value={form.description} onChange={set("description")} placeholder="Optional" />
-        </Field>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <TextField label="Product name" value={form.name} onChange={set("name")} autoFocus placeholder="e.g. CRM Pro License" />
+          <TextField label="Price" type="number" inputProps={{ min: 0, step: 0.01 }} value={form.price} onChange={set("price")} placeholder="0.00" />
+          <TextField label="Description" value={form.description} onChange={set("description")} placeholder="Optional" />
+        </Box>
         <ModalActions onCancel={onClose} submitLabel={isEdit ? "Save changes" : "Create product"} submitting={submitting} />
       </form>
     </Modal>

@@ -1,44 +1,41 @@
 import React from "react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Button, Box } from "@mui/material";
 import { X } from "lucide-react";
 
-//modal
-export function Modal({ title, onClose, children }) {
+// Same external API as before (title, onClose, children) — existing callers
+// that only use <Modal> don't need to change. <Field> is gone though: MUI's
+// TextField/Select already carry their own label, so the wrapper pattern
+// doesn't map cleanly anymore. Every modal that used <Field> needs its
+// inputs swapped for <TextField>/<Select> directly — see NewContactModal.jsx
+// for the converted pattern to copy into the others.
+export function Modal({ title, onClose, children, maxWidth = "xs" }) {
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <span>{title}</span>
-          <button type="button" className="icon-btn" onClick={onClose}>
-            <X size={16} />
-          </button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
+    <Dialog open onClose={onClose} maxWidth={maxWidth} fullWidth>
+      <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, fontWeight: 600 }}>
+        {title}
+        <IconButton size="small" onClick={onClose}><X size={16} /></IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {children}
+      </DialogContent>
+    </Dialog>
   );
 }
 
-// Labeled field wrapper -- keeps every form's markup identical so the CSS
-// (.modal-body label / input / select rules) applies consistently.
-export function Field({ label, children }) {
-  return (
-    <label className="field-label">
-      {label}
-      {children}
-    </label>
-  );
-}
-
-//submit button
+// Not every modal needs Dialog's built-in DialogActions divider styling, so
+// this stays a thin convenience wrapper rather than folding into <Modal>.
 export function ModalActions({ onCancel, submitLabel = "Save", submitting = false }) {
   return (
-    <div className="modal-actions">
-      <button type="button" className="btn-secondary" onClick={onCancel} disabled={submitting}>
-        Cancel
-      </button>
-      <button type="submit" className="btn-primary" disabled={submitting}>
+    <DialogActions sx={{ px: 3, pb: 2 }}>
+      <Button variant="outlined" onClick={onCancel} disabled={submitting}>Cancel</Button>
+      <Button type="submit" variant="contained" disabled={submitting}>
         {submitting ? "Saving…" : submitLabel}
-      </button>
-    </div>
+      </Button>
+    </DialogActions>
   );
+}
+
+// Small helper for laying out two fields side by side (replaces .field-row)
+export function FieldRow({ children }) {
+  return <Box sx={{ display: "flex", gap: 1.5 }}>{children}</Box>;
 }

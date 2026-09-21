@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import {
+  Box, Typography, TextField, InputAdornment, Button, IconButton, Chip,
+  Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Paper, Alert,
+} from "@mui/material";
 import { Search, Pencil } from "lucide-react";
 import { productsApi } from "../api/resources";
-import { DataTable, money } from "../components/Shared";
+import { money } from "../components/Shared";
 import ProductModal from "../components/ProductModal";
-import { DetailSkeleton } from "../components/Skeleton";
-
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -13,7 +15,6 @@ export default function Products() {
   const [query, setQuery] = useState("");
   const [editingProduct, setEditingProduct] = useState(null);
   const [showNew, setShowNew] = useState(false);
-  
 
   useEffect(() => {
     productsApi.list()
@@ -21,10 +22,6 @@ export default function Products() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
-
-    //skeleton loader
-    if (loading) return <DetailSkeleton />;
-    if (error) return <div className="view"><div className="form-error">{error}</div></div>;
 
   const handleSaved = (saved) => {
     setProducts((prev) => {
@@ -47,54 +44,69 @@ export default function Products() {
   const rows = products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
-    <div className="view">
-      <div className="pb-header">
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Products</h1>
-        <div className="search-box">
-          <Search size={14} />
-          <input placeholder="Search products" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
-        <button className="btn-primary" onClick={() => setShowNew(true)}>New Product</button>
-      </div>
+    <Box className="view">
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5, gap: 1.5, flexWrap: "wrap" }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Products</Typography>
+        <TextField
+          size="small"
+          placeholder="Search products"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><Search size={14} /></InputAdornment> }}
+          sx={{ width: 220 }}
+        />
+        <Button variant="contained" onClick={() => setShowNew(true)}>New Product</Button>
+      </Box>
 
-      {error && <div className="form-error">{error}</div>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <DataTable
-        loading={loading}
-        emptyMessage="No products yet."
-        columns={[
-          { key: "name", label: "Name", render: (r) => <strong>{r.name}</strong> },
-          { key: "price", label: "Price", render: (r) => money(r.price) },
-          { key: "description", label: "Description" },
-          {
-            key: "status",
-            label: "Status",
-            render: (r) => (
-              <button
-                className={`status-toggle ${r.is_active ? "active" : "inactive"}`}
-                onClick={(e) => { e.stopPropagation(); toggleActive(r); }}
-              >
-                {r.is_active ? "Active" : "Inactive"}
-              </button>
-            ),
-          },
-          {
-            key: "action",
-            label: "",
-            render: (r) => (
-              <button className="icon-btn" onClick={(e) => { e.stopPropagation(); setEditingProduct(r); }}>
-                <Pencil size={14} />
-              </button>
-            ),
-          },
-        ]}
-        rows={rows}
-      />
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading && (
+              <TableRow><TableCell colSpan={5} align="center">Loading…</TableCell></TableRow>
+            )}
+            {!loading && rows.length === 0 && (
+              <TableRow><TableCell colSpan={5} align="center">No products yet.</TableCell></TableRow>
+            )}
+            {rows.map((r) => (
+              <TableRow key={r.product_id} hover>
+                <TableCell sx={{ fontWeight: 600 }}>{r.name}</TableCell>
+                <TableCell>{money(r.price)}</TableCell>
+                <TableCell>{r.description}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={r.is_active ? "Active" : "Inactive"}
+                    size="small"
+                    onClick={() => toggleActive(r)}
+                    color={r.is_active ? "success" : "default"}
+                    variant={r.is_active ? "filled" : "outlined"}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small" onClick={() => setEditingProduct(r)}>
+                    <Pencil size={14} />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {showNew && <ProductModal onClose={() => setShowNew(false)} onSaved={handleSaved} />}
       {editingProduct && (
         <ProductModal product={editingProduct} onClose={() => setEditingProduct(null)} onSaved={handleSaved} />
       )}
-    </div>
+    </Box>
   );
 }

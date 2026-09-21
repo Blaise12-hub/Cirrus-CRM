@@ -1,11 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Mail, Phone, Building2, ChevronRight } from "lucide-react";
+import { Box, Card, CardContent, Typography, Alert } from "@mui/material";
+import { Mail, Phone, Building2 } from "lucide-react";
 import { contactsApi, accountsApi, opportunitiesApi, activitiesApi } from "../api/resources";
 import { DetailHeader, money } from "../components/Shared";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
 import ReassignOwner from "../components/ReassignOwner";
 import { DetailSkeleton } from "../components/Skeleton";
+
+function MiniRow({ onClick, primary, secondary }) {
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        p: 1, fontSize: 13, cursor: "pointer", borderRadius: 1,
+        "&:hover": { bgcolor: "action.hover" },
+      }}
+    >
+      {primary}
+      {secondary}
+    </Box>
+  );
+}
 
 export default function ContactDetail() {
   const { id } = useParams();
@@ -47,11 +64,11 @@ export default function ContactDetail() {
   }, [id]);
 
   if (loading) return <DetailSkeleton />;
-  if (error) return <div className="view"><div className="form-error">{error}</div></div>;
-  if (!contact) return <div className="view">Contact not found.</div>;
+  if (error) return <Box className="view"><Alert severity="error">{error}</Alert></Box>;
+  if (!contact) return <Box className="view"><Typography>Contact not found.</Typography></Box>;
 
   return (
-    <div className="view">
+    <Box className="view">
       <DetailHeader
         eyebrow="Contact"
         title={`${contact.first_name} ${contact.last_name}`}
@@ -59,38 +76,56 @@ export default function ContactDetail() {
         onBack={() => navigate("/contacts")}
       />
 
-      <div className="detail-info-row">
-        {contact.email && <span><Mail size={13} /> {contact.email}</span>}
-        {contact.phone && <span><Phone size={13} /> {contact.phone}</span>}
+      <Box sx={{ display: "flex", gap: 2.5, alignItems: "center", flexWrap: "wrap", mb: 2.25 }}>
+        {contact.email && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+            <Mail size={13} />
+            <Typography variant="body2" color="text.secondary">{contact.email}</Typography>
+          </Box>
+        )}
+        {contact.phone && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+            <Phone size={13} />
+            <Typography variant="body2" color="text.secondary">{contact.phone}</Typography>
+          </Box>
+        )}
         <ReassignOwner entityType="contact" entityId={Number(id)} currentOwnerId={contact.owner_id} onReassigned={setContact} />
         {account && (
-          <span className="link-chip" onClick={() => navigate(`/accounts/${account.account_id}`)}>
-            <Building2 size={13} /> {account.account_name}
-          </span>
+          <Box
+            onClick={() => navigate(`/accounts/${account.account_id}`)}
+            sx={{ display: "flex", alignItems: "center", gap: 0.6, cursor: "pointer", color: "primary.main", fontWeight: 600, "&:hover": { textDecoration: "underline" } }}
+          >
+            <Building2 size={13} />
+            <Typography variant="body2" sx={{ fontWeight: 600, color: "inherit" }}>{account.account_name}</Typography>
+          </Box>
         )}
-      </div>
+      </Box>
 
-      <div className="detail-columns">
-        <div className="dash-panel">
-          <div className="panel-title">Opportunities ({opportunities.length})</div>
-          {opportunities.length === 0 && <div className="empty-block">No opportunities yet.</div>}
-          <div className="mini-list">
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Opportunities ({opportunities.length})</Typography>
+            {opportunities.length === 0 && <Typography variant="body2" color="text.secondary">No opportunities yet.</Typography>}
             {opportunities.map((o) => (
-              <div key={o.opportunity_id} className="mini-row" onClick={() => navigate(`/opportunities/${o.opportunity_id}`)}>
-                <span>{o.name}</span>
-                <span className="mini-amount">{money(o.amount)}</span>
-              </div>
+              <MiniRow
+                key={o.opportunity_id}
+                onClick={() => navigate(`/opportunities/${o.opportunity_id}`)}
+                primary={<span>{o.name}</span>}
+                secondary={<span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, fontSize: 12.5 }}>{money(o.amount)}</span>}
+              />
             ))}
-          </div>
-        </div>
-        <div className="dash-panel">
-          <div className="panel-title-row">
-            <div className="panel-title">Activity</div>
-            <ActivityLogForm parentType="contact" parentId={Number(id)} onCreated={(a) => setActivities((prev) => [a, ...prev])} />
-          </div>
-          <ActivityTimeline activities={activities} />
-        </div>
-      </div>
-    </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Activity</Typography>
+              <ActivityLogForm parentType="contact" parentId={Number(id)} onCreated={(a) => setActivities((prev) => [a, ...prev])} />
+            </Box>
+            <ActivityTimeline activities={activities} />
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
-}
+} 

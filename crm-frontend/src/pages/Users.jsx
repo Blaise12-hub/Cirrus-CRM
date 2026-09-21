@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
+import { Box, Typography, Button, Chip, Alert, MenuItem, TextField } from "@mui/material";
 import { Plus } from "lucide-react";
 import { usersApi } from "../api/resources";
 import { DataTable } from "../components/Shared";
-import { Modal, Field, ModalActions } from "../components/Modal";
+import { Modal, FieldRow, ModalActions } from "../components/Modal";
 import { useAuth } from "../context/AuthContext";
 
 const ROLES = ["admin", "manager", "sales_rep"];
 
 function StatusPill({ active }) {
   return (
-    <span
-      className="stage-pill"
-      style={{ background: active ? "#2E7D461A" : "#B3261E1A", color: active ? "#2E7D46" : "#B3261E" }}
-    >
-      {active ? "Active" : "Deactivated"}
-    </span>
+    <Chip
+      label={active ? "Active" : "Deactivated"}
+      size="small"
+      color={active ? "success" : "error"}
+      variant={active ? "filled" : "outlined"}
+    />
   );
 }
 
-//FORM FOR CREATING NEW USER
 function NewUserModal({ onClose, onCreated }) {
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", password: "", role: "sales_rep" });
   const [submitting, setSubmitting] = useState(false);
@@ -45,35 +45,25 @@ function NewUserModal({ onClose, onCreated }) {
 
   return (
     <Modal title="New user" onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <div className="field-row">
-          <Field label="First name">
-            <input value={form.first_name} onChange={set("first_name")} autoFocus />
-          </Field>
-          <Field label="Last name">
-            <input value={form.last_name} onChange={set("last_name")} />
-          </Field>
-        </div>
-        <Field label="Email">
-          <input type="email" value={form.email} onChange={set("email")} />
-        </Field>
-        <Field label="Temporary password">
-          <input type="password" value={form.password} onChange={set("password")} placeholder="At least 8 characters" />
-        </Field>
-        <Field label="Role">
-          <select value={form.role} onChange={set("role")}>
-            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </Field>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <FieldRow>
+            <TextField label="First name" value={form.first_name} onChange={set("first_name")} autoFocus />
+            <TextField label="Last name" value={form.last_name} onChange={set("last_name")} />
+          </FieldRow>
+          <TextField label="Email" type="email" value={form.email} onChange={set("email")} />
+          <TextField label="Temporary password" type="password" value={form.password} onChange={set("password")} placeholder="At least 8 characters" />
+          <TextField select label="Role" value={form.role} onChange={set("role")}>
+            {ROLES.map((role) => <MenuItem key={role} value={role} sx={{ textTransform: "capitalize" }}>{role}</MenuItem>)}
+          </TextField>
+        </Box>
         <ModalActions onCancel={onClose} submitLabel="Create user" submitting={submitting} />
       </form>
     </Modal>
   );
 }
 
-// Edit an existing user's role 
-// --the field that actually matters day to day (name/email edits are rare enough not to need their own page yet).
 function EditRoleModal({ targetUser, onClose, onSaved }) {
   const [role, setRole] = useState(targetUser.role);
   const [submitting, setSubmitting] = useState(false);
@@ -94,13 +84,13 @@ function EditRoleModal({ targetUser, onClose, onSaved }) {
 
   return (
     <Modal title={`Edit role — ${targetUser.first_name} ${targetUser.last_name}`} onClose={onClose}>
-      {error && <div className="form-error">{error}</div>}
       <form onSubmit={submit}>
-        <Field label="Role">
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </Field>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <TextField select label="Role" value={role} onChange={(e) => setRole(e.target.value)}>
+            {ROLES.map((roleOption) => <MenuItem key={roleOption} value={roleOption} sx={{ textTransform: "capitalize" }}>{roleOption}</MenuItem>)}
+          </TextField>
+        </Box>
         <ModalActions onCancel={onClose} submitLabel="Save" submitting={submitting} />
       </form>
     </Modal>
@@ -136,16 +126,16 @@ export default function Users() {
   };
 
   return (
-    <div className="view">
-      <div className="pb-header">
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Users</h1>
-        <button className="btn-primary" onClick={() => setShowNew(true)}>
-          <Plus size={14} style={{ verticalAlign: "-2px", marginRight: 4 }} /> New user
-        </button>
-      </div>
+    <Box className="view">
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Users</Typography>
+        <Button variant="contained" startIcon={<Plus size={14} />} onClick={() => setShowNew(true)}>
+          New user
+        </Button>
+      </Box>
 
-      {error && <div className="form-error">{error}</div>}
-      {actionError && <div className="form-error">{actionError}</div>}
+      {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+      {actionError && <Alert severity="error" sx={{ mb: 1.5 }}>{actionError}</Alert>}
 
       <DataTable
         loading={loading}
@@ -159,20 +149,21 @@ export default function Users() {
             key: "actions",
             label: "",
             render: (r) => (
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn-convert" onClick={(e) => { e.stopPropagation(); setEditingUser(r); }}>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Button size="small" variant="outlined" onClick={(e) => { e.stopPropagation(); setEditingUser(r); }}>
                   Edit role
-                </button>
-                <button
-                  className="btn-convert"
-                  style={r.is_active ? { borderColor: "#B3261E", color: "#B3261E" } : {}}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color={r.is_active ? "error" : "primary"}
                   disabled={r.user_id === currentUser.user_id}
                   title={r.user_id === currentUser.user_id ? "You can't deactivate your own account" : ""}
                   onClick={(e) => { e.stopPropagation(); toggleActive(r); }}
                 >
                   {r.is_active ? "Deactivate" : "Reactivate"}
-                </button>
-              </div>
+                </Button>
+              </Box>
             ),
           },
         ]}
@@ -195,6 +186,6 @@ export default function Users() {
           }}
         />
       )}
-    </div>
+    </Box>
   );
 }

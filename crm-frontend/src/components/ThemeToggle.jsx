@@ -1,24 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Sun, Moon } from "lucide-react";
+import { useThemeMode } from "../context/ThemeModeProvider";
 
-// Drop <ThemeToggle /> into Sidebar.jsx's footer, near the logout button.
-// Sets data-theme="dark" on <html>, which index.css's dark overrides key off.
-// Also add the tiny inline script below to index.html's <head> (see wiring
-// notes) so the theme applies before React mounts — avoids a light-mode flash.
+// Kept as a plain button (not MUI) for now, since Sidebar.jsx itself isn't
+// converted yet — matches the existing .theme-toggle CSS. Swap to an MUI
+// IconButton once the sidebar gets its turn in the migration.
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState(() => document.documentElement.getAttribute("data-theme") || "light");
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("crm-theme", theme);
-  }, [theme]);
-
-  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
-
+  const { mode, toggleMode } = useThemeMode();
   return (
-    <button className="theme-toggle" onClick={toggle} title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-      {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-      <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+    <button className="theme-toggle" onClick={toggleMode} title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+      {mode === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+      <span>{mode === "dark" ? "Light mode" : "Dark mode"}</span>
     </button>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Box, TextField, Button, Alert, Typography } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -24,47 +25,37 @@ export default function Login() {
     }
   };
 
-
   return (
-    <div className="login-root">
-      <div className="login-card">
-        <div className="login-brand">Cirrus <span>CRM</span></div>
-        <p className="login-sub">Sign in to your account</p>
+    <Box className="login-root">
+      <Box className="login-card">
+        <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+          Cirrus <Box component="span" sx={{ color: "primary.main" }}>CRM</Box>
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2.5 }}>Sign in to your account</Typography>
 
-        <form onSubmit={submit} className="login-form">
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Eg:you@company.com"
-              autoFocus
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </label>
+        <Box component="form" onSubmit={submit} sx={{ display: "flex", flexDirection: "column", gap: 1.75 }}>
+          <TextField
+            label="Email" type="email" value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com" autoFocus required
+          />
+          <TextField
+            label="Password" type="password" value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••" required
+          />
 
-          {error && <div className="login-error">{error}</div>}
+          {error && <Alert severity="error">{error}</Alert>}
 
-          <button type="submit" className="btn-primary login-submit" disabled={loading}>
+          <Button type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 0.5 }}>
             {loading ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
+          </Button>
+        </Box>
 
-        <p className="login-hint">
-          No account yet? Register a user via <code>POST /api/auth/register</code> for now.
-        </p>
-      </div>
-    </div>
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2.5 }}>
+          Don't have an account? <Link to="/signup" style={{ color: "inherit", fontWeight: 600, textDecoration: "underline" }}>Sign up</Link>
+        </Typography>
+      </Box>
+    </Box>
   );
 }
