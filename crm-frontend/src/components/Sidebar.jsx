@@ -17,12 +17,7 @@ const NAV_ITEMS = [
 const COLLAPSED_WIDTH = 68;
 const EXPANDED_WIDTH = 208;
 
-// PUSH layout, not overlay: the sidebar is a normal flex child with an
-// animated width, and AppLayout's .main-area is flex:1 — it reflows
-// automatically as the width transitions. No fixed/absolute positioning,
-// no manual margin-left calculation to keep in sync. That class of bug
-// (content misaligned or pushed off) can't happen with this approach,
-// since the browser's flexbox engine is doing the layout, not JS math.
+
 function SidebarNavItem({ to, end, label, icon: Icon, expanded }) {
   const resolved = useResolvedPath(to);
   const isActive = !!useMatch({ path: resolved.pathname, end });
