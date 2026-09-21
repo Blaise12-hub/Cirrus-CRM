@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
+import {
+  Card, CardContent, Typography, Alert, Box,
+  Table, TableHead, TableBody, TableRow, TableCell,
+  Select, MenuItem, TextField, Button, IconButton,
+} from "@mui/material";
 import { Trash2 } from "lucide-react";
 import { oppProductsApi, productsApi } from "../api/resources";
 import { money } from "../components/Shared";
 
-// Embed inside OpportunityDetail.jsx: <OpportunityProducts opportunityId={Number(id)} />
-// Note: this shows a computed line-items total but does NOT overwrite the
-// opportunity's own `amount` field — that stays a separate, manually-set
-// value on the opportunity record. Wire that sync yourself if you want it;
-// keeping them independent avoids silently changing a field you set by hand.
 export default function OpportunityProducts({ opportunityId }) {
   const [lineItems, setLineItems] = useState([]);
   const [catalog, setCatalog] = useState([]);
@@ -52,7 +52,9 @@ export default function OpportunityProducts({ opportunityId }) {
       });
       setLineItems((prev) => {
         const exists = prev.some((li) => li.product_id === saved.product_id);
-        return exists ? prev.map((li) => (li.product_id === saved.product_id ? { ...li, ...saved } : li)) : [...prev, { ...saved, name: catalog.find((c) => c.product_id === saved.product_id)?.name }];
+        return exists
+          ? prev.map((li) => (li.product_id === saved.product_id ? { ...li, ...saved } : li))
+          : [...prev, { ...saved, name: catalog.find((c) => c.product_id === saved.product_id)?.name }];
       });
       setProductId("");
       setQuantity(1);
@@ -78,58 +80,65 @@ export default function OpportunityProducts({ opportunityId }) {
   if (loading) return null;
 
   return (
-    <div className="dash-panel" style={{ marginTop: 16 }}>
-      <div className="panel-title">Products</div>
-      {error && <div className="form-error">{error}</div>}
+    <Card>
+      <CardContent>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Products</Typography>
+        {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
-      {lineItems.length > 0 && (
-        <table className="line-items-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Unit price</th>
-              <th>Line total</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {lineItems.map((li) => (
-              <tr key={li.product_id}>
-                <td>{li.name}</td>
-                <td>{li.quantity}</td>
-                <td>{money(li.unit_price)}</td>
-                <td>{money(li.unit_price * li.quantity)}</td>
-                <td>
-                  <button className="icon-btn" onClick={() => removeItem(li.product_id)} title="Remove">
-                    <Trash2 size={13} />
-                  </button>
-                </td>
-              </tr>
+        {lineItems.length > 0 ? (
+          <Table size="small" sx={{ mb: 1.5 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Product</TableCell>
+                <TableCell>Qty</TableCell>
+                <TableCell>Unit price</TableCell>
+                <TableCell>Line total</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {lineItems.map((li) => (
+                <TableRow key={li.product_id}>
+                  <TableCell>{li.name}</TableCell>
+                  <TableCell>{li.quantity}</TableCell>
+                  <TableCell>{money(li.unit_price)}</TableCell>
+                  <TableCell>{money(li.unit_price * li.quantity)}</TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small" onClick={() => removeItem(li.product_id)} title="Remove">
+                      <Trash2 size={13} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell colSpan={3} align="right" sx={{ fontWeight: 600, border: 0 }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 600, border: 0 }}>{money(total)}</TableCell>
+                <TableCell sx={{ border: 0 }} />
+              </TableRow>
+            </TableBody>
+          </Table>
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>No products added yet.</Typography>
+        )}
+
+        <Box component="form" onSubmit={addItem} sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Select size="small" displayEmpty value={productId} onChange={onProductChange} sx={{ flex: 2 }}>
+            <MenuItem value="">Select product…</MenuItem>
+            {catalog.map((p) => (
+              <MenuItem key={p.product_id} value={p.product_id}>{p.name}</MenuItem>
             ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={3} style={{ textAlign: "right", fontWeight: 600 }}>Total</td>
-              <td style={{ fontWeight: 600 }}>{money(total)}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      )}
-      {lineItems.length === 0 && <div className="empty-block">No products added yet.</div>}
-
-      <form className="line-item-add-row" onSubmit={addItem}>
-        <select value={productId} onChange={onProductChange}>
-          <option value="">Select product…</option>
-          {catalog.map((p) => (
-            <option key={p.product_id} value={p.product_id}>{p.name}</option>
-          ))}
-        </select>
-        <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="Qty" />
-        <input type="number" min="0" step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="Unit price" />
-        <button type="submit" className="btn-secondary" disabled={adding}>{adding ? "Adding…" : "Add"}</button>
-      </form>
-    </div>
+          </Select>
+          <TextField
+            type="number" size="small" inputProps={{ min: 1 }} value={quantity}
+            onChange={(e) => setQuantity(e.target.value)} placeholder="Qty" sx={{ flex: 1, minWidth: 70 }}
+          />
+          <TextField
+            type="number" size="small" inputProps={{ min: 0, step: 0.01 }} value={unitPrice}
+            onChange={(e) => setUnitPrice(e.target.value)} placeholder="Unit price" sx={{ flex: 1, minWidth: 90 }}
+          />
+          <Button type="submit" variant="outlined" disabled={adding}>{adding ? "Adding…" : "Add"}</Button>
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

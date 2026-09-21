@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useMatch, useResolvedPath, NavLink } from "react-router-dom";
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography } from "@mui/material";
 import { LayoutDashboard, Building2, Users, UserPlus, Target, LogOut, ShieldCheck, Package } from "lucide-react";
@@ -14,11 +14,16 @@ const NAV_ITEMS = [
   { to: "/products", label: "Products", icon: Package },
 ];
 
-// Active state computed explicitly with useMatch instead of relying on
-// NavLink's auto-applied "active" CSS class — that class-matching approach
-// is what caused the oversized/inconsistent active pill. This way there's
-// no class name involved at all: isActive is a plain boolean driving sx.
-function SidebarNavItem({ to, end, label, icon: Icon }) {
+const COLLAPSED_WIDTH = 68;
+const EXPANDED_WIDTH = 208;
+
+// PUSH layout, not overlay: the sidebar is a normal flex child with an
+// animated width, and AppLayout's .main-area is flex:1 — it reflows
+// automatically as the width transitions. No fixed/absolute positioning,
+// no manual margin-left calculation to keep in sync. That class of bug
+// (content misaligned or pushed off) can't happen with this approach,
+// since the browser's flexbox engine is doing the layout, not JS math.
+function SidebarNavItem({ to, end, label, icon: Icon, expanded }) {
   const resolved = useResolvedPath(to);
   const isActive = !!useMatch({ path: resolved.pathname, end });
 
@@ -32,18 +37,22 @@ function SidebarNavItem({ to, end, label, icon: Icon }) {
         borderRadius: 1.5,
         mb: 0.25,
         py: 1,
-        px: 1.25,
+        px: expanded ? 1.25 : 0,
         minHeight: 38,
-        boxSizing: "border-box",
+        justifyContent: expanded ? "flex-start" : "center",
         color: isActive ? "#fff" : "#C9D6E8",
         bgcolor: isActive ? "primary.main" : "transparent",
-        fontSize: 13,
-        fontWeight: 500,
         "&:hover": { bgcolor: isActive ? "primary.main" : "rgba(255,255,255,0.06)", color: "#fff" },
       }}
     >
-      <ListItemIcon sx={{ minWidth: 30, color: "inherit" }}><Icon size={16} /></ListItemIcon>
-      <ListItemText disableTypography sx={{ fontSize: 13, fontWeight: 500, m: 0 }}>{label}</ListItemText>
+      <ListItemIcon sx={{ minWidth: expanded ? 30 : "auto", color: "inherit", justifyContent: "center" }}>
+        <Icon size={16} />
+      </ListItemIcon>
+      {expanded && (
+        <ListItemText disableTypography sx={{ fontSize: 13, fontWeight: 500, m: 0, whiteSpace: "nowrap" }}>
+          {label}
+        </ListItemText>
+      )}
     </ListItemButton>
   );
 }
@@ -51,6 +60,7 @@ function SidebarNavItem({ to, end, label, icon: Icon }) {
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -60,37 +70,67 @@ export default function Sidebar() {
   const canManageUsers = user && (user.role === "admin" || user.role === "manager");
 
   return (
-    <Box sx={{ width: 208, flexShrink: 0, bgcolor: "#002050", color: "#fff", display: "flex", flexDirection: "column", p: 1.5 }}>
-      <Typography sx={{ fontWeight: 700, fontSize: 15, px: 1.25, pb: 2.5, letterSpacing: "-0.01em" }}>
-        Cirrus <Box component="span" sx={{ color: "#6FA8E0" }}>CRM</Box>
+    <Box
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      sx={{
+        width: expanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
+        flexShrink: 0,
+        bgcolor: "#002050",
+        color: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        p: 1.5,
+        transition: "width 0.18s ease",
+        overflow: "hidden",
+      }}
+    >
+      <Typography
+        noWrap
+        sx={{
+          fontWeight: 700, fontSize: 15, pb: 2.5, letterSpacing: "-0.01em",
+          px: expanded ? 1.25 : 0, textAlign: expanded ? "left" : "center",
+        }}
+      >
+        {expanded ? <>Cirrus <Box component="span" sx={{ color: "#6FA8E0" }}>CRM</Box></> : "C"}
       </Typography>
 
-      <ThemeToggle />
+      <ThemeToggle expanded={expanded} />
 
       <List disablePadding sx={{ mt: 0.5 }}>
         {NAV_ITEMS.map((item) => (
-          <SidebarNavItem key={item.to} to={item.to} end={item.end} label={item.label} icon={item.icon} />
+          <SidebarNavItem key={item.to} to={item.to} end={item.end} label={item.label} icon={item.icon} expanded={expanded} />
         ))}
         {canManageUsers && (
-          <SidebarNavItem to="/users" label="Users" icon={ShieldCheck} />
+          <SidebarNavItem to="/users" label="Users" icon={ShieldCheck} expanded={expanded} />
         )}
       </List>
 
       <Box sx={{ mt: "auto", pt: 1.5 }}>
         <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 1.5 }} />
-        {user && (
+        {user && expanded && (
           <Box sx={{ px: 1.25, pb: 1.25 }}>
-            <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: "#fff" }}>{user.first_name} {user.last_name}</Typography>
+            <Typography noWrap sx={{ fontSize: 12.5, fontWeight: 600, color: "#fff" }}>{user.first_name} {user.last_name}</Typography>
             <Typography sx={{ fontSize: 11, color: "#8FA6C4", textTransform: "capitalize" }}>{user.role}</Typography>
           </Box>
         )}
         <ListItemButton
           onClick={handleLogout}
           disableGutters
-          sx={{ borderRadius: 1.5, py: 1, px: 1.25, minHeight: 38, color: "#C9D6E8", "&:hover": { bgcolor: "rgba(255,255,255,0.06)", color: "#fff" } }}
+          sx={{
+            borderRadius: 1.5, py: 1, px: expanded ? 1.25 : 0, minHeight: 38,
+            justifyContent: expanded ? "flex-start" : "center",
+            color: "#C9D6E8", "&:hover": { bgcolor: "rgba(255,255,255,0.06)", color: "#fff" },
+          }}
         >
-          <ListItemIcon sx={{ minWidth: 30, color: "inherit" }}><LogOut size={16} /></ListItemIcon>
-          <ListItemText disableTypography sx={{ fontSize: 13, fontWeight: 500, m: 0 }}>Log out</ListItemText>
+          <ListItemIcon sx={{ minWidth: expanded ? 30 : "auto", color: "inherit", justifyContent: "center" }}>
+            <LogOut size={16} />
+          </ListItemIcon>
+          {expanded && (
+            <ListItemText disableTypography sx={{ fontSize: 13, fontWeight: 500, m: 0, whiteSpace: "nowrap" }}>
+              Log out
+            </ListItemText>
+          )}
         </ListItemButton>
       </Box>
     </Box>
