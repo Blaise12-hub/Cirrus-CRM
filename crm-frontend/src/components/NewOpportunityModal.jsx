@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { TextField, MenuItem, Alert, Box } from "@mui/material";
 import { Modal, ModalActions, FieldRow } from "./Modal";
-import { opportunitiesApi } from "../api/resources";
+import { opportunitiesApi, accountsApi, contactsApi } from "../api/resources";
 
 const STAGES = [
   { value: "prospecting", label: "Prospecting" },
@@ -12,7 +12,19 @@ const STAGES = [
   { value: "lost", label: "Lost" },
 ];
 
-export default function NewOpportunityModal({ accounts, contacts, defaultAccountId, onClose, onCreated }) {
+export default function NewOpportunityModal({ accounts: initialAccounts, contacts: initialContacts, defaultAccountId, onClose, onCreated }) {
+  const [accounts, setAccounts] = useState(initialAccounts || []);
+  const [contacts, setContacts] = useState(initialContacts || []);
+
+  useEffect(() => {
+    if (!initialAccounts) {
+      accountsApi.list().then(setAccounts).catch(() => {});
+    }
+    if (!initialContacts) {
+      contactsApi.list().then(setContacts).catch(() => {});
+    }
+  }, [initialAccounts, initialContacts]);
+
   const [form, setForm] = useState({
     name: "",
     account_id: defaultAccountId || "",

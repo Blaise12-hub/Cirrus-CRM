@@ -13,6 +13,7 @@ import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
 import { STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, tickStyle, monoTickStyle, tooltipStyle, WinRateGauge } from "./dashboardShared";
+import QuickStartCards from "../components/QuickStartCards";
 
 // Plain CSS Grid via sx — see RepDashboard.jsx for why (MUI Grid v5 vs v6+ API split).
 const statGridSx = { display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1.75, mb: 3 };
@@ -103,6 +104,8 @@ export default function TeamDashboard() {
   return (
     <Box className="view">
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 2.5 }}>Good morning, {user?.first_name || ""}</Typography>
+
+      <QuickStartCards />
 
       <Box sx={statGridSx}>
         <StatCard label="Open pipeline" value={money(openTotal)} sub={`${open.length} open deals`} />

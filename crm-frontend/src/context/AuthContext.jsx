@@ -33,8 +33,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = (updated) => {
+    setUser((prev) => {
+      const next = typeof updated === "function" ? updated(prev) : { ...prev, ...updated };
+      localStorage.setItem("crm_user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, ready }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, ready }}>
       {children}
     </AuthContext.Provider>
   );
