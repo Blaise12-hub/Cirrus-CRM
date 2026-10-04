@@ -14,6 +14,7 @@ import { opportunitiesApi, leadsApi, contactsApi, dashboardApi } from "../api/re
 import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
+import AnimatedCounter from "../components/AnimatedCounter";
 import {
   STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS,
   tickStyle, tooltipStyle, WinRateGauge,
@@ -32,9 +33,15 @@ const LEAD_STATUS_LABELS = {
   converted: "Converted", disqualified: "Disqualified",
 };
 
-function StatCard({ label, value, sub, color }) {
+function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
   return (
-    <Card>
+    <Card
+      className="stat-card-accent"
+      style={{
+        "--accent-from": accentFrom || "#1160B7",
+        "--accent-to": accentTo || "#5E7CE2",
+      }}
+    >
       <CardContent>
         <Typography variant="caption" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }} color="text.secondary">
           {label}
@@ -140,20 +147,36 @@ export default function RepDashboard() {
   const todayLabel = `As of Today at ${now}`;
 
   return (
-    <Box className="view">
+    <Box className="view fade-in-up">
       <QuickStartCards />
 
       {/* ── Stat cards ──────────────────────────────────────────── */}
       <Box sx={statGridSx}>
-        <StatCard label="My open pipeline" value={money(openTotal)} sub={`${open.length} open deals`} />
-        <StatCard label="Won this period" value={money(wonTotal)} color="success.main" />
+        <StatCard
+          label="My open pipeline"
+          value={<AnimatedCounter value={openTotal} format="money" />}
+          sub={`${open.length} open deals`}
+          accentFrom="#1160B7" accentTo="#5E7CE2"
+        />
+        <StatCard
+          label="Won this period"
+          value={<AnimatedCounter value={wonTotal} format="money" />}
+          color="success.main"
+          accentFrom="#2E7D46" accentTo="#4CAF50"
+        />
         <StatCard
           label="Overdue activities"
-          value={overdue}
+          value={<AnimatedCounter value={overdue} />}
           sub={`${summary?.activity_load.due_today ?? 0} due today`}
           color={overdue > 0 ? "error.main" : undefined}
+          accentFrom={overdue > 0 ? "#B3261E" : "#8A8D91"}
+          accentTo={overdue > 0 ? "#E57373" : "#B0BEC5"}
         />
-        <StatCard label="New leads" value={newLeads.length} />
+        <StatCard
+          label="New leads"
+          value={<AnimatedCounter value={newLeads.length} />}
+          accentFrom="#5E7CE2" accentTo="#90CAF9"
+        />
       </Box>
 
       {overdueDeals && overdueDeals.count > 0 && (

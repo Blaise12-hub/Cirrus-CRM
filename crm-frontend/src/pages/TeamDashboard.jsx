@@ -12,6 +12,7 @@ import { opportunitiesApi, leadsApi, dashboardApi } from "../api/resources";
 import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
+import AnimatedCounter from "../components/AnimatedCounter";
 import { STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, tickStyle, monoTickStyle, tooltipStyle, WinRateGauge } from "./dashboardShared";
 import QuickStartCards from "../components/QuickStartCards";
 
@@ -19,9 +20,15 @@ import QuickStartCards from "../components/QuickStartCards";
 const statGridSx = { display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1.75, mb: 3 };
 const twoColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 };
 
-function StatCard({ label, value, sub, color }) {
+function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
   return (
-    <Card>
+    <Card
+      className="stat-card-accent"
+      style={{
+        "--accent-from": accentFrom || "#1160B7",
+        "--accent-to": accentTo || "#5E7CE2",
+      }}
+    >
       <CardContent>
         <Typography variant="caption" sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }} color="text.secondary">
           {label}
@@ -102,16 +109,30 @@ export default function TeamDashboard() {
   const overdueDeals = summary?.overdue_deals;
 
   return (
-    <Box className="view">
+    <Box className="view fade-in-up">
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 2.5 }}>Good morning, {user?.first_name || ""}</Typography>
 
       <QuickStartCards />
 
       <Box sx={statGridSx}>
-        <StatCard label="Open pipeline" value={money(openTotal)} sub={`${open.length} open deals`} />
-        <StatCard label="Won this period" value={money(wonTotal)} color="success.main" />
-        <StatCard label="Total deals" value={opportunities.length} />
-        <StatCard label="New leads" value={newLeads.length} />
+        <StatCard
+          label="Open pipeline" value={<AnimatedCounter value={openTotal} format="money" />}
+          sub={`${open.length} open deals`}
+          accentFrom="#1160B7" accentTo="#5E7CE2"
+        />
+        <StatCard
+          label="Won this period" value={<AnimatedCounter value={wonTotal} format="money" />}
+          color="success.main"
+          accentFrom="#2E7D46" accentTo="#4CAF50"
+        />
+        <StatCard
+          label="Total deals" value={<AnimatedCounter value={opportunities.length} />}
+          accentFrom="#8A8D91" accentTo="#B0BEC5"
+        />
+        <StatCard
+          label="New leads" value={<AnimatedCounter value={newLeads.length} />}
+          accentFrom="#5E7CE2" accentTo="#90CAF9"
+        />
       </Box>
 
       {overdueDeals && overdueDeals.count > 0 && (
@@ -158,17 +179,27 @@ export default function TeamDashboard() {
           <Typography variant="subtitle1" sx={{ fontWeight: 700, mt: 3.5, mb: 1.75 }}>Pipeline & Activity</Typography>
 
           <Box sx={statGridSx}>
-            <StatCard label="Weighted pipeline" value={money(summary.weighted_value)} sub="amount × probability" />
             <StatCard
-              label="Overdue activities" value={overdue}
+              label="Weighted pipeline" value={<AnimatedCounter value={summary.weighted_value} format="money" />}
+              sub="amount × probability"
+              accentFrom="#1160B7" accentTo="#4A9EFF"
+            />
+            <StatCard
+              label="Overdue activities" value={<AnimatedCounter value={overdue} />}
               sub={`${summary.activity_load.due_today} due today`}
               color={overdue > 0 ? "error.main" : undefined}
+              accentFrom={overdue > 0 ? "#B3261E" : "#8A8D91"}
+              accentTo={overdue > 0 ? "#E57373" : "#B0BEC5"}
             />
-            <StatCard label="Due next 7 days" value={summary.activity_load.upcoming_7d} />
+            <StatCard
+              label="Due next 7 days" value={<AnimatedCounter value={summary.activity_load.upcoming_7d} />}
+              accentFrom="#B25E09" accentTo="#FFB74D"
+            />
             <StatCard
               label="Recent deals value"
-              value={money(summary.recent_deals.reduce((s, d) => s + Number(d.amount || 0), 0))}
+              value={<AnimatedCounter value={summary.recent_deals.reduce((s, d) => s + Number(d.amount || 0), 0)} format="money" />}
               sub={`last ${summary.recent_deals.length} deals`}
+              accentFrom="#5E7CE2" accentTo="#90CAF9"
             />
           </Box>
 

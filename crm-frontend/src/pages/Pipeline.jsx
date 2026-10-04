@@ -17,6 +17,8 @@ import { money, shortDate } from "../components/Shared";
 import { KanbanSkeleton } from "../components/Skeleton";
 import { Modal, ModalActions, FieldRow } from "../components/Modal";
 import { useNotifications } from "../context/NotificationsContext";
+import { useSnackbar } from "../context/SnackbarContext";
+import AnimatedCounter from "../components/AnimatedCounter";
 
 const STAGES = [
   { key: "prospecting", label: "Prospecting", accent: "#8A8D91", prob: 10 },
@@ -151,6 +153,7 @@ function NewDealModal({ onClose, onCreated, defaultStage = "prospecting" }) {
 export default function Pipeline() {
   const navigate = useNavigate();
   const { syncWithBackend } = useNotifications();
+  const { showSnackbar } = useSnackbar();
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -255,11 +258,14 @@ export default function Pipeline() {
     try {
       await opportunitiesApi.updateStage(dealId, nextStage);
       syncWithBackend(); // sync notifications
+      const stageName = STAGES.find((s) => s.key === nextStage)?.label || nextStage;
+      showSnackbar(`Deal moved to ${stageName}`, "success");
     } catch (err) {
       setOpportunities((prev) =>
         prev.map((o) => (o.opportunity_id === dealId ? { ...o, stage: current.stage } : o))
       );
       setError(`Failed to update stage: ${err.message}`);
+      showSnackbar(`Failed to update stage: ${err.message}`, "error");
     }
   };
 
@@ -298,16 +304,16 @@ export default function Pipeline() {
   }
 
   return (
-    <Box className="view">
+    <Box className="view fade-in-up">
       {/* ── Top Metric Cards Banner ────────────────────────────── */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1.75, mb: 2.5 }}>
-        <Card>
+        <Card className="stat-card-accent" style={{ "--accent-from": "#1160B7", "--accent-to": "#5E7CE2" }}>
           <CardContent sx={{ p: "16px !important" }}>
             <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }} color="text.secondary">
               Open Pipeline Value
             </Typography>
             <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, mt: 0.5 }}>
-              {money(metrics.openTotal)}
+              <AnimatedCounter value={metrics.openTotal} format="money" />
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {metrics.openCount} active opportunities
@@ -315,13 +321,13 @@ export default function Pipeline() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="stat-card-accent" style={{ "--accent-from": "#4A9EFF", "--accent-to": "#7AB8FF" }}>
           <CardContent sx={{ p: "16px !important" }}>
             <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }} color="text.secondary">
               Weighted Forecast
             </Typography>
             <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, mt: 0.5, color: "primary.main" }}>
-              {money(metrics.weightedTotal)}
+              <AnimatedCounter value={metrics.weightedTotal} format="money" />
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Probability-weighted revenue
@@ -329,13 +335,13 @@ export default function Pipeline() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="stat-card-accent" style={{ "--accent-from": "#2E7D46", "--accent-to": "#4CAF50" }}>
           <CardContent sx={{ p: "16px !important" }}>
             <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }} color="text.secondary">
               Closed Won (YTD)
             </Typography>
             <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, mt: 0.5, color: "success.main" }}>
-              {money(metrics.wonTotal)}
+              <AnimatedCounter value={metrics.wonTotal} format="money" />
             </Typography>
             <Typography variant="caption" color="success.main">
               Revenue booked
@@ -343,13 +349,13 @@ export default function Pipeline() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="stat-card-accent" style={{ "--accent-from": "#8A8D91", "--accent-to": "#B0BEC5" }}>
           <CardContent sx={{ p: "16px !important" }}>
             <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4 }} color="text.secondary">
               Average Deal Size
             </Typography>
             <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, fontWeight: 700, mt: 0.5, color: "text.primary" }}>
-              {money(metrics.avgDeal)}
+              <AnimatedCounter value={metrics.avgDeal} format="money" />
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Per open opportunity
@@ -770,6 +776,7 @@ export default function Pipeline() {
           onCreated={(created) => {
             setOpportunities((prev) => [created, ...prev]);
             syncWithBackend();
+            showSnackbar(`"${created.name}" created successfully`, "success");
           }}
         />
       )}

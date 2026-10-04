@@ -37,9 +37,22 @@
   --color-skeleton-b: #1D2029;
 }
 
-/* Charts keep their current (light-tuned) hex colors in both modes for now —
-   they're set in JS, not CSS, so this override can't reach them. Known
-   simplification, revisit if a chart looks washed out in dark mode. */
+/* ---- Animations ---- */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 0.28s ease-out both;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
 
 * { box-sizing: border-box; }
 
@@ -109,6 +122,17 @@ body {
 .stat-label { font-size: 12px; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
 .stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600; margin-top: 6px; }
 .stat-sub { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+
+/* ---- Gradient accent for MUI stat cards ---- */
+.stat-card-accent { position: relative; overflow: hidden; }
+.stat-card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-from, #1160B7), var(--accent-to, #5E7CE2));
+  border-radius: 8px 8px 0 0;
+}
 
 .dash-columns, .detail-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
 .dash-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; }

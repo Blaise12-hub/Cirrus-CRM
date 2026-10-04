@@ -4,9 +4,11 @@ import { Box, GlobalStyles } from "@mui/material";
 import ThemeModeProvider from "./context/ThemeModeProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
+import SnackbarProvider from "./context/SnackbarContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
+import PageTransition from "./components/PageTransition";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
@@ -40,7 +42,7 @@ function AppLayout({ children }) {
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
           <TopBar />
           <Box component="main" sx={{ flex: 1, overflowY: "auto", p: { xs: 2, sm: 3.5 }, bgcolor: "background.default" }}>
-            {children}
+            <PageTransition>{children}</PageTransition>
           </Box>
         </Box>
       </Box>
@@ -53,6 +55,7 @@ export default function App() {
     <ThemeModeProvider>
       <AuthProvider>
         <NotificationsProvider>
+          <SnackbarProvider>
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -102,6 +105,7 @@ export default function App() {
               } />
             </Routes>
           </BrowserRouter>
+          </SnackbarProvider>
         </NotificationsProvider>
       </AuthProvider>
     </ThemeModeProvider>
