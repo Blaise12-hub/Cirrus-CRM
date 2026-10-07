@@ -2,16 +2,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box, Typography, Card, CardContent, Button, Chip,
-  IconButton, Tabs, Tab, Dialog, DialogTitle,
-  DialogContent, DialogActions, Switch, FormControlLabel,
-  Divider, Tooltip
+  IconButton, Dialog, DialogTitle, DialogContent,
+  DialogActions, Switch, FormControlLabel, Divider, Tooltip
 } from "@mui/material";
 import {
   Bell, CheckCheck, Trash2, Check, ArrowRight,
   TrendingUp, UserPlus, Clock, AlertTriangle, Settings,
-  Sparkles, ShieldCheck
+  Sparkles, ShieldCheck, ChevronRight, ChevronDown,
+  Activity, ShoppingCart, UserCheck, Flame, Atom,
+  Mail, ExternalLink, Calendar, Smartphone
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationsContext";
+import { useSnackbar } from "../context/SnackbarContext";
 
 export default function Notifications() {
   const navigate = useNavigate();
@@ -24,15 +26,17 @@ export default function Notifications() {
     dismissNotification,
     clearAll,
   } = useNotifications();
+  const { showSnackbar } = useSnackbar ? useSnackbar() : { showSnackbar: () => {} };
 
   const [activeTab, setActiveTab] = useState("all");
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const [dismissedActions, setDismissedActions] = useState([]);
   const [prefs, setPrefs] = useState({
     dealsWon: true,
     leadAssigned: true,
     tasksDue: true,
     pastDueDeals: true,
-    emailDigest: false,
+    emailDigest: true,
     soundAlerts: true,
   });
 
@@ -53,224 +57,487 @@ export default function Notifications() {
 
   const filtered = getFilteredNotifications();
 
-  // Helper to format relative or short time
+  // Helper to format relative or short time in EDT format matching template
   const formatTime = (isoString) => {
     try {
       const date = new Date(isoString);
       const diffMin = Math.round((Date.now() - date.getTime()) / 60000);
-      if (diffMin < 1) return "Just now";
-      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffMin < 1) return "Just now • EDT";
+      if (diffMin < 60) return `${diffMin}m ago • EDT`;
       const diffHours = Math.round(diffMin / 60);
-      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffHours < 24) return `${diffHours}h ago • EDT`;
       const diffDays = Math.round(diffHours / 24);
-      if (diffDays === 1) return "Yesterday";
-      return `${diffDays}d ago`;
+      if (diffDays === 1) return "Yesterday • EDT";
+      return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} • EDT`;
     } catch {
       return "Recently";
     }
   };
 
-  const getIconForType = (type) => {
+  const getTimelineBadge = (type) => {
     switch (type) {
       case "deal_won":
-        return { icon: <TrendingUp size={18} />, color: "#2E7D46", bg: "rgba(46, 125, 70, 0.12)" };
+        return { badgeClass: "green", icon: <TrendingUp size={16} />, label: "Closed Won" };
       case "lead_assigned":
-        return { icon: <UserPlus size={18} />, color: "#1160B7", bg: "rgba(17, 96, 183, 0.12)" };
-      case "activity_due":
-        return { icon: <Clock size={18} />, color: "#B25E09", bg: "rgba(178, 94, 9, 0.12)" };
+        return { badgeClass: "teal", icon: <UserPlus size={16} />, label: "Lead Assigned" };
       case "deal_alert":
-        return { icon: <AlertTriangle size={18} />, color: "#B3261E", bg: "rgba(179, 38, 30, 0.12)" };
+        return { badgeClass: "orange", icon: <AlertTriangle size={16} />, label: "Stalled Deal" };
+      case "activity_due":
+        return { badgeClass: "blue", icon: <Clock size={16} />, label: "Task Follow-up" };
       default:
-        return { icon: <Sparkles size={18} />, color: "#5E7CE2", bg: "rgba(94, 124, 226, 0.12)" };
+        return { badgeClass: "purple", icon: <Sparkles size={16} />, label: "System Intelligence" };
     }
   };
 
   return (
-    <Box className="view" sx={{ pb: 3 }}>
-      {/* ── Top Header ────────────────────────────────────────── */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
-        <Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.01em" }}>
-              Notification Center
-            </Typography>
-            {unreadCount > 0 && (
-              <Chip
-                label={`${unreadCount} New`}
-                size="small"
-                color="error"
-                sx={{ height: 22, fontSize: 11, fontWeight: 700 }}
-              />
-            )}
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Real-time updates on pipeline changes, deals, leads, and operational activities.
+    <Box className="view fade-in-up" sx={{ pb: 4 }}>
+      {/* ── Salesforce-Style Object Header & Highlights Panel ───────────────────────── */}
+      <Box sx={{ mb: 2 }}>
+        {/* Breadcrumb row */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, fontSize: 12, color: "text.secondary" }}>
+          <span>Home</span>
+          <ChevronRight size={14} />
+          <span>Activity & Signals</span>
+          <ChevronRight size={14} />
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: "primary.main" }}>
+            Notification Center & Alerts
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {unreadCount > 0 && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<CheckCheck size={14} />}
-              onClick={markAllAsRead}
-            >
-              Mark all as read
-            </Button>
-          )}
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Settings size={14} />}
-            onClick={() => setPrefsOpen(true)}
-          >
-            Preferences
-          </Button>
-          {notifications.length > 0 && (
-            <Tooltip title="Clear all notifications">
-              <IconButton size="small" color="error" onClick={clearAll} sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
-                <Trash2 size={15} />
+        {/* Highlights panel */}
+        <Card sx={{ border: "1px solid var(--color-border)", borderRadius: "8px", overflow: "hidden" }}>
+          <Box sx={{ p: { xs: 2, sm: 2.5 }, display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "flex-start", md: "center" }, justifyContent: "space-between", gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: "8px",
+                  bgcolor: "#002050",
+                  color: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(0,32,80,0.2)",
+                  flexShrink: 0,
+                }}
+              >
+                <Bell size={26} color="#4A9EFF" />
+              </Box>
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: 18, sm: 22 }, letterSpacing: "-0.01em" }}>
+                    Notification Center
+                  </Typography>
+                  {unreadCount > 0 ? (
+                    <Chip
+                      label={`${unreadCount} Unread Actions`}
+                      size="small"
+                      sx={{ height: 20, fontSize: 10, fontWeight: 700, bgcolor: "#FDEDEC", color: "#B3261E" }}
+                    />
+                  ) : (
+                    <Chip
+                      label="All Caught Up"
+                      size="small"
+                      sx={{ height: 20, fontSize: 10, fontWeight: 700, bgcolor: "#E3F3E9", color: "#2E7D46" }}
+                    />
+                  )}
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: 12.5 }}>
+                  Real-time pipeline alerts, automated lead routing, and customer outreach reminders.
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Quick Action buttons */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {unreadCount > 0 && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<CheckCheck size={14} />}
+                  onClick={() => {
+                    markAllAsRead();
+                    if (showSnackbar) showSnackbar("All notifications marked as read", "success");
+                  }}
+                  sx={{ textTransform: "none", fontSize: 12.5, fontWeight: 600 }}
+                >
+                  Mark all as read
+                </Button>
+              )}
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Settings size={14} />}
+                onClick={() => setPrefsOpen(true)}
+                sx={{ textTransform: "none", fontSize: 12.5, fontWeight: 600 }}
+              >
+                Preferences
+              </Button>
+              {notifications.length > 0 && (
+                <Tooltip title="Clear all notifications">
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => {
+                      clearAll();
+                      if (showSnackbar) showSnackbar("Notification feed cleared", "info");
+                    }}
+                    sx={{ border: "1px solid var(--color-border)", borderRadius: "6px" }}
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+
+          {/* Highlights Metrics Strip */}
+          <Divider />
+          <Box sx={{
+            px: { xs: 2, sm: 2.5 },
+            py: 1.5,
+            bgcolor: "action.hover",
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
+            gap: 2,
+          }}>
+            <Box>
+              <Typography className="sf-card-subtitle" sx={{ fontSize: 10 }}>Total Notifications</Typography>
+              <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, mt: 0.25 }}>
+                {notifications.length} Records
+              </Typography>
+            </Box>
+            <Box>
+              <Typography className="sf-card-subtitle" sx={{ fontSize: 10 }}>Unread Alerts</Typography>
+              <Typography sx={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 13, color: unreadCount > 0 ? "error.main" : "text.secondary", mt: 0.25 }}>
+                {unreadCount} Pending
+              </Typography>
+            </Box>
+            <Box>
+              <Typography className="sf-card-subtitle" sx={{ fontSize: 10 }}>Delivery Channels</Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: 13, color: "success.main", mt: 0.25 }}>
+                In-App + Email Active
+              </Typography>
+            </Box>
+            <Box>
+              <Typography className="sf-card-subtitle" sx={{ fontSize: 10 }}>Signal Health</Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: 13, color: "primary.main", mt: 0.25 }}>
+                100% Operational
+              </Typography>
+            </Box>
+          </Box>
+        </Card>
+      </Box>
+
+      {/* ── Sub Navigation Filter Tabs (Matches Pro Template) ─────────────────────────── */}
+      <Box className="sf-subnav">
+        <button
+          className={`sf-tab ${activeTab === "all" ? "active" : ""}`}
+          onClick={() => setActiveTab("all")}
+        >
+          <Bell size={15} />
+          All Signals ({notifications.length})
+        </button>
+        <button
+          className={`sf-tab ${activeTab === "unread" ? "active" : ""}`}
+          onClick={() => setActiveTab("unread")}
+        >
+          <Activity size={15} />
+          Unread ({unreadCount})
+        </button>
+        <button
+          className={`sf-tab ${activeTab === "deals" ? "active" : ""}`}
+          onClick={() => setActiveTab("deals")}
+        >
+          <TrendingUp size={15} />
+          Deals & Revenue
+        </button>
+        <button
+          className={`sf-tab ${activeTab === "leads" ? "active" : ""}`}
+          onClick={() => setActiveTab("leads")}
+        >
+          <UserPlus size={15} />
+          Inbound Leads
+        </button>
+        <button
+          className={`sf-tab ${activeTab === "activities" ? "active" : ""}`}
+          onClick={() => setActiveTab("activities")}
+        >
+          <Clock size={15} />
+          Tasks & System
+        </button>
+      </Box>
+
+      {/* ── Main Pro 2-Column Layout (Stream + Next Best Actions & Patterns) ─────────── */}
+      <Box sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", lg: "1fr 340px" },
+        gap: 2.5,
+        alignItems: "start"
+      }}>
+        {/* ── LEFT PANE: Engagement Feed of Notifications (Matches Pro Template) ─────── */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Card className="sf-card">
+            <Box className="sf-card-header" sx={{ mb: 2 }}>
+              <Typography className="sf-card-title">
+                <Activity size={18} color="#0176D3" /> Notification & Signal Stream
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                Showing {filtered.length} of {notifications.length}
+              </Typography>
+            </Box>
+
+            {filtered.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 6, color: "text.secondary" }}>
+                <Bell size={36} style={{ opacity: 0.3, margin: "0 auto 12px auto" }} />
+                <Typography sx={{ fontWeight: 700, fontSize: 14 }}>No notifications in this view</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {activeTab === "unread" ? "You're all caught up! No pending alerts." : "Try selecting 'All Signals' to view historical events."}
+                </Typography>
+              </Box>
+            ) : (
+              <Box className="sf-timeline">
+                {filtered.map((item) => {
+                  const { badgeClass, icon, label } = getTimelineBadge(item.type);
+                  return (
+                    <Box key={item.id} className="sf-timeline-row">
+                      <ChevronRight size={14} className="sf-timeline-expand" />
+                      <Box className={`sf-timeline-badge ${badgeClass}`}>
+                        {icon}
+                      </Box>
+                      <Box className="sf-timeline-body">
+                        <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
+                          <Typography
+                            className="sf-timeline-title"
+                            onClick={() => {
+                              markAsRead(item.id);
+                              if (item.link) navigate(item.link);
+                            }}
+                          >
+                            {item.title}
+                          </Typography>
+                          {!item.read && (
+                            <Chip
+                              label="New"
+                              size="small"
+                              sx={{ height: 16, fontSize: 9, fontWeight: 700, bgcolor: "#E8F2FD", color: "#0176D3" }}
+                            />
+                          )}
+                        </Box>
+                        <Typography className="sf-timeline-meta">
+                          {item.description}
+                        </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 0.75, flexWrap: "wrap", gap: 1 }}>
+                          <Typography className="sf-timeline-time">
+                            {formatTime(item.timestamp)} • <span style={{ color: "#0176D3", fontWeight: 600 }}>{label}</span>
+                          </Typography>
+
+                          {/* Quick Actions */}
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            {item.link && (
+                              <button
+                                className="sf-action-btn-secondary"
+                                style={{ padding: "2px 6px", fontSize: 11.5 }}
+                                onClick={() => {
+                                  markAsRead(item.id);
+                                  navigate(item.link);
+                                }}
+                              >
+                                View Record →
+                              </button>
+                            )}
+                            <button
+                              className="sf-action-btn-secondary"
+                              style={{ padding: "2px 6px", fontSize: 11.5, color: "var(--color-text-muted)" }}
+                              onClick={() => (item.read ? markAsUnread(item.id) : markAsRead(item.id))}
+                            >
+                              {item.read ? "Mark unread" : "Mark read"}
+                            </button>
+                            <button
+                              className="sf-action-btn-secondary"
+                              style={{ padding: "2px 6px", fontSize: 11.5, color: "#B3261E" }}
+                              onClick={() => dismissNotification(item.id)}
+                            >
+                              Dismiss
+                            </button>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+
+            {filtered.length > 0 && (
+              <Box sx={{ mt: 2.5, pt: 1.5, borderTop: "1px solid var(--color-border)", textAlign: "center" }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  sx={{ textTransform: "none", fontSize: 12.5, fontWeight: 700, color: "#0176D3" }}
+                  onClick={() => {
+                    if (showSnackbar) showSnackbar("All notification signals synchronized", "info");
+                  }}
+                >
+                  Show more...
+                </Button>
+              </Box>
+            )}
+          </Card>
+        </Box>
+
+        {/* ── RIGHT PANE: Next Best Actions & Patterns (Matches Pro Template) ───────── */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          {/* Card 1: Next Best Actions (Exact match from reference template) */}
+          <Card className="sf-next-action">
+            <Box className="sf-next-action-header">
+              <Box className="sf-next-action-title">
+                <Atom size={20} color="#0176D3" />
+                Next Best Actions
+              </Box>
+              <IconButton size="small">
+                <ChevronDown size={16} />
               </IconButton>
-            </Tooltip>
-          )}
+            </Box>
+
+            {!dismissedActions.includes(1) && (
+              <Box className="sf-next-action-row" sx={{ mb: 1.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box className="sf-action-icon-ring">
+                    <Sparkles size={16} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: 13 }}>
+                      Review Stalled Enterprise Deal
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Apex Global Cloud ($140,000) hasn't had activity in 16 days.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <button
+                    className="sf-action-btn-secondary"
+                    onClick={() => setDismissedActions([...dismissedActions, 1])}
+                  >
+                    Not Helpful
+                  </button>
+                  <button
+                    className="sf-action-btn-primary"
+                    onClick={() => {
+                      navigate("/pipeline");
+                      setDismissedActions([...dismissedActions, 1]);
+                    }}
+                  >
+                    Take Action
+                  </button>
+                </Box>
+              </Box>
+            )}
+
+            {!dismissedActions.includes(2) && (
+              <Box className="sf-next-action-row">
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box className="sf-action-icon-ring" sx={{ borderColor: "#0176D3", color: "#0176D3" }}>
+                    <Activity size={16} />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: 13 }}>
+                      Route 4 Inbound Leads
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      New enterprise submissions waiting in unassigned lead queue.
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <button
+                    className="sf-action-btn-secondary"
+                    onClick={() => setDismissedActions([...dismissedActions, 2])}
+                  >
+                    Not Helpful
+                  </button>
+                  <button
+                    className="sf-action-btn-primary"
+                    onClick={() => {
+                      navigate("/leads");
+                      setDismissedActions([...dismissedActions, 2]);
+                    }}
+                  >
+                    Take Action
+                  </button>
+                </Box>
+              </Box>
+            )}
+          </Card>
+
+          {/* Card 2: Signal Patterns (Heatmap & Histogram from template) */}
+          <Card className="sf-card">
+            <Box className="sf-card-header">
+              <Typography className="sf-card-title">
+                Engagement & Signal Patterns
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>
+                Days of Week Signal Density
+              </Typography>
+              <Box className="sf-heatmap-grid" sx={{ mt: 1, mb: 2 }}>
+                {[
+                  { day: "Su", bg: "#C6DBF5" },
+                  { day: "M", bg: "#8CB9F0" },
+                  { day: "T", bg: "#4E97EB" },
+                  { day: "W", bg: "#1D78E2" },
+                  { day: "Th", bg: "#015BB5" },
+                  { day: "F", bg: "#0176D3" },
+                  { day: "Sa", bg: "#C6DBF5" },
+                ].map((item, idx) => (
+                  <Box key={idx} className="sf-heatmap-cell">
+                    <Typography className="sf-heatmap-day">{item.day}</Typography>
+                    <Box className="sf-heatmap-block" sx={{ bgcolor: item.bg }} />
+                  </Box>
+                ))}
+              </Box>
+
+              <Typography variant="caption" sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>
+                Times of Day Alert Distribution
+              </Typography>
+              <Box className="sf-histogram-grid" sx={{ mt: 1 }}>
+                {[
+                  { time: "12a", h: "12%", muted: true },
+                  { time: "", h: "8%", muted: true },
+                  { time: "4a", h: "15%", muted: true },
+                  { time: "", h: "25%", muted: true },
+                  { time: "8a", h: "60%", muted: true },
+                  { time: "", h: "75%", muted: false },
+                  { time: "12p", h: "90%", muted: false },
+                  { time: "", h: "80%", muted: false },
+                  { time: "4p", h: "50%", muted: true },
+                  { time: "", h: "35%", muted: true },
+                  { time: "8p", h: "20%", muted: true },
+                  { time: "12a", h: "10%", muted: true },
+                ].map((col, idx) => (
+                  <Box key={idx} className="sf-histogram-col">
+                    <Box className={`sf-histogram-bar ${col.muted ? "muted" : ""}`} sx={{ height: col.h }} />
+                    {col.time ? <Typography className="sf-histogram-time">{col.time}</Typography> : <Box sx={{ height: 14 }} />}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </Card>
         </Box>
       </Box>
 
-      {/* ── Filter Tabs ───────────────────────────────────────── */}
-      <Card sx={{ mb: 2.5 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(_, val) => setActiveTab(val)}
-          sx={{
-            px: 2,
-            "& .MuiTab-root": {
-              fontSize: 13,
-              fontWeight: 600,
-              textTransform: "none",
-              minHeight: 48,
-            },
-          }}
-        >
-          <Tab value="all" label={`All (${notifications.length})`} />
-          <Tab value="unread" label={`Unread (${unreadCount})`} />
-          <Tab value="deals" label="Deals & Pipeline" />
-          <Tab value="leads" label="Leads" />
-          <Tab value="activities" label="Activities & System" />
-        </Tabs>
-      </Card>
-
-      {/* ── Notifications List ────────────────────────────────── */}
-      {filtered.length === 0 ? (
-        <Card sx={{ textAlign: "center", py: 8 }}>
-          <CardContent>
-            <Bell size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>No notifications found</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {activeTab === "unread" ? "You're all caught up! No unread notifications." : "There are no notifications in this category."}
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
-          {filtered.map((item) => {
-            const { icon, color, bg } = getIconForType(item.type);
-            return (
-              <Card
-                key={item.id}
-                sx={{
-                  borderLeft: 4,
-                  borderLeftColor: item.read ? "transparent" : "primary.main",
-                  bgcolor: item.read ? "background.paper" : "action.hover",
-                  transition: "all 0.15s ease",
-                  "&:hover": {
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                    borderColor: "primary.main",
-                  },
-                }}
-              >
-                <CardContent sx={{ p: "14px 18px !important", display: "flex", alignItems: "flex-start", gap: 2 }}>
-                  <Box
-                    sx={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: "50%",
-                      bgcolor: bg,
-                      color: color,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      mt: 0.25,
-                    }}
-                  >
-                    {icon}
-                  </Box>
-
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.25 }}>
-                      <Typography sx={{ fontWeight: item.read ? 600 : 700, fontSize: 13.5 }}>
-                        {item.title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
-                        {formatTime(item.timestamp)}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: 13, mb: 1 }}>
-                      {item.description}
-                    </Typography>
-
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                      {item.link && (
-                        <Button
-                          size="small"
-                          variant="text"
-                          endIcon={<ArrowRight size={12} />}
-                          onClick={() => {
-                            markAsRead(item.id);
-                            navigate(item.link);
-                          }}
-                          sx={{ fontSize: 12, p: 0, minWidth: 0, fontWeight: 600 }}
-                        >
-                          View Details
-                        </Button>
-                      )}
-                      <Typography variant="caption" sx={{ color: "text.disabled" }}>•</Typography>
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => (item.read ? markAsUnread(item.id) : markAsRead(item.id))}
-                        sx={{ fontSize: 12, p: 0, minWidth: 0, color: "text.secondary" }}
-                      >
-                        {item.read ? "Mark as unread" : "Mark as read"}
-                      </Button>
-                      <Typography variant="caption" sx={{ color: "text.disabled" }}>•</Typography>
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => dismissNotification(item.id)}
-                        sx={{ fontSize: 12, p: 0, minWidth: 0, color: "text.secondary", "&:hover": { color: "error.main" } }}
-                      >
-                        Dismiss
-                      </Button>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
-      )}
-
-      {/* ── Preferences Dialog ────────────────────────────────── */}
+      {/* ── Preferences Modal ──────────────────────────────────────────────────────── */}
       <Dialog open={prefsOpen} onClose={() => setPrefsOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
           Notification Preferences
         </DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Control which triggers generate notifications and how you wish to receive them.
+            Control which triggers generate real-time alerts and executive digests.
           </Typography>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -367,7 +634,14 @@ export default function Notifications() {
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setPrefsOpen(false)}>Done</Button>
+          <Button
+            onClick={() => {
+              setPrefsOpen(false);
+              if (showSnackbar) showSnackbar("Notification preferences updated", "success");
+            }}
+          >
+            Done
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
