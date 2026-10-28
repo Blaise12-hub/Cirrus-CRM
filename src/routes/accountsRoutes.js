@@ -2,6 +2,7 @@ import express from "express";
 import pool from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { ownerScope } from "../utils/scope.js";
+import { resolveOwnerId, isValidId } from "../utils/policies.js";
 
 const router = express.Router();
 router.use(requireAuth);
@@ -21,8 +22,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/accounts/:id
+// GET /api/accounts/:id  -- scoped to owner
 router.get("/:id", async (req, res) => {
+  if (!isValidId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid account id" });
+  }
   try {
     const { clause, params } = ownerScope(req.user, "owner_id", [req.params.id]);
     const result = await pool.query(
@@ -42,15 +46,16 @@ router.get("/:id", async (req, res) => {
 // POST /api/accounts
 router.post("/", async (req, res) => {
   const { account_name, industry, website, phone, billing_address, owner_id } = req.body;
-  if (!account_name) {
+  if (!account_name || typeof account_name !== "string" || account_name.trim() === "") {
     return res.status(400).json({ error: "account_name is required" });
   }
   try {
+    const resolvedOwner = resolveOwnerId(req.user.role, owner_id, req.user.user_id);
     const result = await pool.query(
       `INSERT INTO crm.accounts (account_name, industry, website, phone, billing_address, owner_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [account_name, industry, website, phone, billing_address, owner_id || req.user.user_id]
+      [account_name.trim(), industry || null, website || null, phone || null, billing_address || null, resolvedOwner]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -59,24 +64,35 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PATCH /api/accounts/:id
+// PATCH /api/accounts/:id  -- scoped to owner
 router.patch("/:id", async (req, res) => {
-  const fields = ["account_name", "industry", "website", "phone", "billing_address", "owner_id"];
-  const updates = fields.filter((f) => req.body[f] !== undefined);
+  if (!isValidId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid account id" });
+  }
 
+  const allowedFields = ["account_name", "industry", "website", "phone", "billing_address"];
+  if (req.user.role === "admin" || req.user.role === "manager") {
+    allowedFields.push("owner_id");
+  }
+
+  const updates = allowedFields.filter((f) => req.body[f] !== undefined);
   if (updates.length === 0) {
     return res.status(400).json({ error: "No valid fields provided to update" });
   }
 
   const setClause = updates.map((f, i) => `${f} = $${i + 1}`).join(", ");
-  const values = updates.map((f) => req.body[f]);
+  const values = updates.map((f) => {
+    const val = req.body[f];
+    return typeof val === "string" ? val.trim() : val;
+  });
 
   try {
+    const { clause, params } = ownerScope(req.user, "owner_id", [...values, req.params.id]);
     const result = await pool.query(
       `UPDATE crm.accounts SET ${setClause}, updated_at = now()
-       WHERE account_id = $${updates.length + 1}
+       WHERE account_id = $${updates.length + 1} ${clause}
        RETURNING *`,
-      [...values, req.params.id]
+      params
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Account not found" });
@@ -88,12 +104,16 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/accounts/:id
+// DELETE /api/accounts/:id  -- scoped to owner
 router.delete("/:id", async (req, res) => {
+  if (!isValidId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid account id" });
+  }
   try {
+    const { clause, params } = ownerScope(req.user, "owner_id", [req.params.id]);
     const result = await pool.query(
-      `DELETE FROM crm.accounts WHERE account_id = $1 RETURNING account_id`,
-      [req.params.id]
+      `DELETE FROM crm.accounts WHERE account_id = $1 ${clause} RETURNING account_id`,
+      params
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Account not found" });
