@@ -7,6 +7,8 @@ import { DetailHeader, money } from "../components/Shared";
 import { ActivityTimeline, ActivityLogForm } from "../components/Activity";
 import ReassignOwner from "../components/ReassignOwner";
 import { DetailSkeleton } from "../components/Skeleton";
+import { useAuth } from "../context/AuthContext";
+import { canReassignOwner } from "../utils/permissions";
 
 function MiniRow({ onClick, primary, secondary }) {
   return (
@@ -27,6 +29,7 @@ function MiniRow({ onClick, primary, secondary }) {
 export default function ContactDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [contact, setContact] = useState(null);
   const [account, setAccount] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
@@ -89,7 +92,9 @@ export default function ContactDetail() {
             <Typography variant="body2" color="text.secondary">{contact.phone}</Typography>
           </Box>
         )}
-        <ReassignOwner entityType="contact" entityId={Number(id)} currentOwnerId={contact.owner_id} onReassigned={setContact} />
+        {canReassignOwner(user?.role) && (
+          <ReassignOwner entityType="contact" entityId={Number(id)} currentOwnerId={contact.owner_id} onReassigned={setContact} />
+        )}
         {account && (
           <Box
             onClick={() => navigate(`/accounts/${account.account_id}`)}
@@ -128,4 +133,4 @@ export default function ContactDetail() {
       </Box>
     </Box>
   );
-} 
+}

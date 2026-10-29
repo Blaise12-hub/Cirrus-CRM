@@ -3,6 +3,7 @@ import { Box, Select, MenuItem, IconButton, Typography, CircularProgress } from 
 import { Pencil, Check, X } from "lucide-react";
 import { accountsApi, contactsApi, opportunitiesApi, usersApi } from "../api/resources";
 import { useAuth } from "../context/AuthContext";
+import { canReassignOwner } from "../utils/permissions";
 
 // Same assumptions flagged as before: useAuth() shape and each *Api's
 // .update(id, data) method — verify against your real files.
@@ -21,11 +22,11 @@ export default function ReassignOwner({ entityType, entityId, currentOwnerId, on
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const canReassign = user && (user.role === "admin" || user.role === "manager");
+  const canReassign = canReassignOwner(user?.role);
 
   useEffect(() => {
     if (!editing || users.length) return;
-    usersApi.list().then(setUsers).catch(() => {});
+    usersApi.list().then(setUsers).catch(() => { });
   }, [editing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

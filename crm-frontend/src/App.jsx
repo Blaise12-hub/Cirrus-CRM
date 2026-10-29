@@ -56,55 +56,55 @@ export default function App() {
       <AuthProvider>
         <NotificationsProvider>
           <SnackbarProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
 
-              <Route path="/" element={
-                <ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/pipeline" element={
-                <ProtectedRoute><AppLayout><Pipeline /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/accounts" element={
-                <ProtectedRoute><AppLayout><AccountsList /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/accounts/:id" element={
-                <ProtectedRoute><AppLayout><AccountDetail /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/contacts" element={
-                <ProtectedRoute><AppLayout><ContactsList /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/contacts/:id" element={
-                <ProtectedRoute><AppLayout><ContactDetail /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/opportunities/:id" element={
-                <ProtectedRoute><AppLayout><OpportunityDetail /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/leads" element={
-                <ProtectedRoute><AppLayout><Leads /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/users" element={
-                <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/products" element={
-                <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Products /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/faqs" element={
-                <ProtectedRoute><AppLayout><Faqs /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/notifications" element={
-                <ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>
-              } />
-            </Routes>
-          </BrowserRouter>
+                <Route path="/" element={
+                  <ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/pipeline" element={
+                  <ProtectedRoute><AppLayout><Pipeline /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/accounts" element={
+                  <ProtectedRoute><AppLayout><AccountsList /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/accounts/:id" element={
+                  <ProtectedRoute><AppLayout><AccountDetail /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/contacts" element={
+                  <ProtectedRoute><AppLayout><ContactsList /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/contacts/:id" element={
+                  <ProtectedRoute><AppLayout><ContactDetail /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/opportunities/:id" element={
+                  <ProtectedRoute><AppLayout><OpportunityDetail /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/leads" element={
+                  <ProtectedRoute><AppLayout><Leads /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/users" element={
+                  <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Users /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/products" element={
+                  <ProtectedRoute roles={["admin", "manager"]}><AppLayout><Products /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/faqs" element={
+                  <ProtectedRoute><AppLayout><Faqs /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/notifications" element={
+                  <ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>
+                } />
+              </Routes>
+            </BrowserRouter>
           </SnackbarProvider>
         </NotificationsProvider>
       </AuthProvider>
