@@ -10,6 +10,7 @@ import opportunitiesRoutes from "./routes/opportunitiesRoutes.js";
 import leadsRoutes from "./routes/leadsRoutes.js";
 import activitiesRoutes from "./routes/activitiesRoutes.js"; 
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import notificationsRoutes from "./routes/notificationsRoutes.js";
 
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/opportunities", opportunitiesRoutes);
 app.use("/api/leads", leadsRoutes);
 app.use("/api/activities", activitiesRoutes);
 app.use("/api/dashboard", dashboardRoutes); 
+app.use("/api/notifications", notificationsRoutes); 
 
 
 // displaying errors
