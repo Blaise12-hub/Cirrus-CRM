@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import {
-  Box, Card, CardContent, Typography, Alert,
-  Table, TableHead, TableBody, TableRow, TableCell,
+  Box, Card, CardContent, Typography, Alert, Table, TableHead, TableBody, TableRow, TableCell,
   TextField, InputAdornment, Button, IconButton,
 } from "@mui/material";
-import { Search, ChevronDown, Plus, RotateCw } from "lucide-react";
+import { Search, ChevronDown, RotateCw } from "lucide-react";
 import { opportunitiesApi, leadsApi, contactsApi, dashboardApi } from "../api/resources";
 import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
 import AnimatedCounter from "../components/AnimatedCounter";
 import {
-  STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS,
-  tickStyle, tooltipStyle, WinRateGauge,
-} from "./dashboardShared";
+  STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, STAT_ACCENTS,
+  useChartStyles, compactMoney, DashboardGreeting, WinRateGauge,
+} from "./DashboardShared";
 import QuickStartCards from "../components/QuickStartCards";
+import { MyTasksWidget } from "../components/Activity";
 
 // Plain CSS Grid via sx, not MUI's <Grid> component — sidesteps the
 // item/xs/sm/md vs size={} API split between MUI v5 and v6+.
@@ -28,9 +27,8 @@ const threeColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", lg: 
 const twoColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 };
 
 const LEAD_STATUS_LABELS = {
-  new: "New", contacted: "Contacted", nurturing: "Nurturing",
-  qualified: "Qualified", unqualified: "Unqualified",
-  converted: "Converted", disqualified: "Disqualified",
+  new: "New", contacted: "Contacted", nurturing: "Nurturing", qualified: "Qualified",
+  unqualified: "Unqualified", converted: "Converted", disqualified: "Disqualified",
 };
 
 function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
@@ -38,8 +36,8 @@ function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
     <Card
       className="stat-card-accent"
       style={{
-        "--accent-from": accentFrom || "#1160B7",
-        "--accent-to": accentTo || "#5E7CE2",
+        "--accent-from": accentFrom || "var(--color-primary)",
+        "--accent-to": accentTo || "var(--color-accent)",
       }}
     >
       <CardContent>
@@ -85,6 +83,8 @@ function PanelHeader({ title, onRefresh }) {
 export default function RepDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const cs = useChartStyles();
+  const A = STAT_ACCENTS;
   const [opportunities, setOpportunities] = useState([]);
   const [leads, setLeads] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -97,7 +97,10 @@ export default function RepDashboard() {
     (async () => {
       try {
         const [opps, leadList, contactList, summaryData] = await Promise.all([
-          opportunitiesApi.list(), leadsApi.list(), contactsApi.list(), dashboardApi.summary(),
+          opportunitiesApi.list(),
+          leadsApi.list(),
+          contactsApi.list(),
+          dashboardApi.summary(),
         ]);
         if (cancelled) return;
         setOpportunities(opps);
@@ -129,7 +132,7 @@ export default function RepDashboard() {
     .map((status) => ({
       label: LEAD_STATUS_LABELS[status] || status,
       count: leads.filter((l) => l.status === status).length,
-      fill: LEAD_STATUS_COLORS[status] || "#1160B7",
+      fill: LEAD_STATUS_COLORS[status] || cs.brandFill,
     }))
     .filter((d) => d.count > 0);
 
@@ -139,7 +142,7 @@ export default function RepDashboard() {
     .map((stage) => ({
       label: STAGE_LABELS[stage] || stage,
       count: opportunities.filter((o) => o.stage === stage).length,
-      fill: STAGE_COLORS[stage] || "#1160B7",
+      fill: STAGE_COLORS[stage] || cs.brandFill,
     }))
     .filter((d) => d.count > 0);
 
@@ -148,6 +151,8 @@ export default function RepDashboard() {
 
   return (
     <Box className="view fade-in-up">
+      <DashboardGreeting name={user?.first_name} />
+
       <QuickStartCards />
 
       {/* ── Stat cards ──────────────────────────────────────────── */}
@@ -156,26 +161,26 @@ export default function RepDashboard() {
           label="My open pipeline"
           value={<AnimatedCounter value={openTotal} format="money" />}
           sub={`${open.length} open deals`}
-          accentFrom="#1160B7" accentTo="#5E7CE2"
+          accentFrom={A.brand[0]} accentTo={A.brand[1]}
         />
         <StatCard
           label="Won this period"
           value={<AnimatedCounter value={wonTotal} format="money" />}
           color="success.main"
-          accentFrom="#2E7D46" accentTo="#4CAF50"
+          accentFrom={A.success[0]} accentTo={A.success[1]}
         />
         <StatCard
           label="Overdue activities"
           value={<AnimatedCounter value={overdue} />}
           sub={`${summary?.activity_load.due_today ?? 0} due today`}
           color={overdue > 0 ? "error.main" : undefined}
-          accentFrom={overdue > 0 ? "#B3261E" : "#8A8D91"}
-          accentTo={overdue > 0 ? "#E57373" : "#B0BEC5"}
+          accentFrom={overdue > 0 ? A.danger[0] : A.neutral[0]}
+          accentTo={overdue > 0 ? A.danger[1] : A.neutral[1]}
         />
         <StatCard
           label="New leads"
           value={<AnimatedCounter value={newLeads.length} />}
-          accentFrom="#5E7CE2" accentTo="#90CAF9"
+          accentFrom={A.info[0]} accentTo={A.info[1]}
         />
       </Box>
 
@@ -187,9 +192,29 @@ export default function RepDashboard() {
         </Alert>
       )}
 
+      {/* ── Today's priorities + win rate ───────────────────────── */}
+      <Box sx={{ ...twoColGridSx, mb: 2 }}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Today's priorities</Typography>
+            <MyTasksWidget />
+          </CardContent>
+        </Card>
+        {summary && (
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>My win rate</Typography>
+              <WinRateGauge pct={summary.win_rate.win_rate_pct} />
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", textAlign: "center" }}>
+                {summary.win_rate.won} won / {summary.win_rate.lost} lost
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+      </Box>
+
       {/* ── Three chart panels matching Salesforce layout ─────── */}
       <Box sx={threeColGridSx}>
-
         {/* My Leads — horizontal bar by status */}
         <Card>
           <CardContent sx={{ pb: "12px !important" }}>
@@ -202,15 +227,12 @@ export default function RepDashboard() {
             ) : (
               <ResponsiveContainer width="100%" height={leadChartData.length * 36 + 20}>
                 <BarChart data={leadChartData} layout="vertical" barCategoryGap="25%">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEEEEE" />
-                  <XAxis type="number" tick={tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis
-                    type="category" dataKey="label" width={80}
-                    tick={{ ...tickStyle, textAnchor: "end" }} axisLine={false} tickLine={false}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={cs.gridStroke} />
+                  <XAxis type="number" tick={cs.tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis type="category" dataKey="label" width={80} tick={{ ...cs.tickStyle, textAnchor: "end" }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
                   <Bar dataKey="count" name="Count" radius={[0, 3, 3, 0]} maxBarSize={18}>
-                    {leadChartData.map((entry, i) => <Cell key={i} fill="#1160B7" />)}
+                    {leadChartData.map((entry, i) => <Cell key={i} fill={cs.brandFill} />)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -223,9 +245,9 @@ export default function RepDashboard() {
               >
                 View Report
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}>
                 <Typography variant="caption" color="text.secondary">{todayLabel}</Typography>
-                <RotateCw size={11} color="#6B6B6B" />
+                <RotateCw size={11} />
               </Box>
             </Box>
           </CardContent>
@@ -243,13 +265,10 @@ export default function RepDashboard() {
             ) : (
               <ResponsiveContainer width="100%" height={oppChartData.length * 36 + 20}>
                 <BarChart data={oppChartData} layout="vertical" barCategoryGap="25%">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEEEEE" />
-                  <XAxis type="number" tick={tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis
-                    type="category" dataKey="label" width={80}
-                    tick={{ ...tickStyle, textAnchor: "end" }} axisLine={false} tickLine={false}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={cs.gridStroke} />
+                  <XAxis type="number" tick={cs.tickStyle} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis type="category" dataKey="label" width={80} tick={{ ...cs.tickStyle, textAnchor: "end" }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
                   <Bar dataKey="count" name="Count" radius={[0, 3, 3, 0]} maxBarSize={18}>
                     {oppChartData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                   </Bar>
@@ -264,9 +283,9 @@ export default function RepDashboard() {
               >
                 View Report
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}>
                 <Typography variant="caption" color="text.secondary">{todayLabel}</Typography>
-                <RotateCw size={11} color="#6B6B6B" />
+                <RotateCw size={11} />
               </Box>
             </Box>
           </CardContent>
@@ -316,55 +335,45 @@ export default function RepDashboard() {
               >
                 View Report
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}>
                 <Typography variant="caption" color="text.secondary">{todayLabel}</Typography>
-                <RotateCw size={11} color="#6B6B6B" />
+                <RotateCw size={11} />
               </Box>
             </Box>
           </CardContent>
         </Card>
       </Box>
 
-      {/* ── Win rate gauge ───────────────────────────────────────── */}
+      {/* ── Pipeline by stage ────────────────────────────────────── */}
       {summary && (
-        <Box sx={twoColGridSx}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>My pipeline by stage</Typography>
-              {summary.pipeline.filter((p) => p.count > 0).length === 0 ? (
-                <Typography variant="caption" color="text.secondary">No open deals to chart yet.</Typography>
-              ) : (
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart
-                    data={summary.pipeline.filter((p) => p.count > 0).map((p) => ({
-                      stage: STAGE_LABELS[p.stage], amount: p.total_amount, fill: STAGE_COLORS[p.stage],
-                    }))}
-                    barCategoryGap="35%"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                    <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
-                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ ...tickStyle, fontFamily: "IBM Plex Mono" }} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
-                      {summary.pipeline.filter((p) => p.count > 0).map((entry, i) => <Cell key={i} fill={STAGE_COLORS[entry.stage]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>My win rate</Typography>
-              <WinRateGauge pct={summary.win_rate.win_rate_pct} />
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", textAlign: "center" }}>
-                {summary.win_rate.won} won / {summary.win_rate.lost} lost
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>My pipeline by stage</Typography>
+            {summary.pipeline.filter((p) => p.count > 0).length === 0 ? (
+              <Typography variant="caption" color="text.secondary">No open deals to chart yet.</Typography>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={summary.pipeline.filter((p) => p.count > 0).map((p) => ({
+                    stage: STAGE_LABELS[p.stage],
+                    amount: p.total_amount,
+                    fill: STAGE_COLORS[p.stage],
+                  }))}
+                  barCategoryGap="35%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cs.gridStroke} />
+                  <XAxis dataKey="stage" tick={cs.tickStyle} axisLine={{ stroke: cs.axisStroke }} tickLine={false} />
+                  <YAxis tickFormatter={compactMoney} allowDecimals={false} tick={cs.monoTickStyle} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(v) => money(v)} contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
+                    {summary.pipeline.filter((p) => p.count > 0).map((entry, i) => <Cell key={i} fill={STAGE_COLORS[entry.stage]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       )}
     </Box>
   );
 }
-

@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Box, Typography, TextField, InputAdornment,
-  IconButton, Avatar, Menu, MenuItem, Divider,
-  ListItemIcon, ListItemText, Button, Badge, Tooltip, Chip,
+  Box, Typography, IconButton, Avatar, Menu, MenuItem, Divider,
+  ListItemIcon, ListItemText, Badge, Tooltip, Chip,
 } from "@mui/material";
-import {
-  Search, HelpCircle, Bell, Settings, LogOut, Smile, User,
-  Plus, TrendingUp, UserPlus, Building2
-} from "lucide-react";
+import { Search, HelpCircle, Bell, Settings, LogOut, User, Plus, TrendingUp, UserPlus, Building2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationsContext";
+import { stages } from "../design/tokens";
 import GlobalSearchModal from "./GlobalSearchModal";
 import NewOpportunityModal from "./NewOpportunityModal";
 import NewLeadModal from "./NewLeadModal";
@@ -76,41 +73,6 @@ export default function TopBar() {
 
   return (
     <Box sx={{ flexShrink: 0 }}>
-      {/* ── Announcement banner ──────────────────────────────────── */}
-      <Box
-        sx={{
-          bgcolor: "#4A26C8",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 1.5,
-          py: "5px",
-          px: 2,
-        }}
-      >
-        <Smile size={14} style={{ flexShrink: 0, color: "#fff" }} />
-        <Typography component="span" sx={{ fontSize: 12.5, fontWeight: 500, color: "#fff" }}>
-          Upgrade to grow your business faster.
-        </Typography>
-        <Button
-          size="small"
-          variant="outlined"
-          sx={{
-            color: "#fff",
-            borderColor: "rgba(255,255,255,0.7)",
-            fontSize: 11.5,
-            py: "1px",
-            px: 1.25,
-            minWidth: 0,
-            lineHeight: 1.6,
-            "&:hover": { bgcolor: "rgba(255,255,255,0.12)", borderColor: "#fff" },
-          }}
-        >
-          Compare Plans
-        </Button>
-      </Box>
-
       {/* ── Main top bar ─────────────────────────────────────────── */}
       <Box
         sx={{
@@ -138,6 +100,7 @@ export default function TopBar() {
               border: 1,
               borderColor: "divider",
               bgcolor: "action.hover",
+              color: "text.secondary",
               cursor: "pointer",
               width: { xs: 180, sm: 260, md: 340 },
               transition: "all 0.15s ease",
@@ -148,7 +111,7 @@ export default function TopBar() {
               },
             }}
           >
-            <Search size={14} color="#6B6B6B" />
+            <Search size={14} />
             <Typography sx={{ fontSize: 12.5, color: "text.secondary", flex: 1 }}>
               Search CRM (deals, leads, accounts)…
             </Typography>
@@ -178,7 +141,7 @@ export default function TopBar() {
               onClick={(e) => setCreateMenuAnchor(e.currentTarget)}
               sx={{
                 bgcolor: "primary.main",
-                color: "#FFFFFF",
+                color: "primary.contrastText",
                 width: 28,
                 height: 28,
                 mr: 0.5,
@@ -207,7 +170,7 @@ export default function TopBar() {
           </IconButton>
 
           <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 0.5 }}>
-            <Avatar sx={{ width: 30, height: 30, fontSize: 13, bgcolor: "primary.main" }}>{initials}</Avatar>
+            <Avatar sx={{ width: 30, height: 30, fontSize: 13, bgcolor: "primary.main", color: "primary.contrastText" }}>{initials}</Avatar>
           </IconButton>
         </Box>
 
@@ -229,7 +192,7 @@ export default function TopBar() {
               setActiveModal("opp");
             }}
           >
-            <ListItemIcon><TrendingUp size={16} color="#1160B7" /></ListItemIcon>
+            <ListItemIcon><TrendingUp size={16} color={stages.proposal} /></ListItemIcon>
             <ListItemText primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}>New Opportunity</ListItemText>
           </MenuItem>
           <MenuItem
@@ -238,7 +201,7 @@ export default function TopBar() {
               setActiveModal("lead");
             }}
           >
-            <ListItemIcon><UserPlus size={16} color="#2E7D46" /></ListItemIcon>
+            <ListItemIcon><UserPlus size={16} color={stages.won} /></ListItemIcon>
             <ListItemText primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}>New Lead</ListItemText>
           </MenuItem>
           <MenuItem
@@ -247,7 +210,7 @@ export default function TopBar() {
               setActiveModal("contact");
             }}
           >
-            <ListItemIcon><User size={16} color="#5E7CE2" /></ListItemIcon>
+            <ListItemIcon><User size={16} color={stages.qualification} /></ListItemIcon>
             <ListItemText primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}>New Contact</ListItemText>
           </MenuItem>
           <MenuItem
@@ -256,7 +219,7 @@ export default function TopBar() {
               setActiveModal("account");
             }}
           >
-            <ListItemIcon><Building2 size={16} color="#B25E09" /></ListItemIcon>
+            <ListItemIcon><Building2 size={16} color={stages.negotiation} /></ListItemIcon>
             <ListItemText primaryTypographyProps={{ fontSize: 13, fontWeight: 500 }}>New Account</ListItemText>
           </MenuItem>
         </Menu>

@@ -17,7 +17,8 @@ const NAV_ITEMS = [
 const COLLAPSED_WIDTH = 68;
 const EXPANDED_WIDTH = 208;
 
-
+// Sidebar colors are CSS variables from index.css (mirrors src/design/tokens.js),
+// so they flip with data-theme without any JS.
 function SidebarNavItem({ to, end, label, icon: Icon, expanded }) {
   const resolved = useResolvedPath(to);
   const isActive = !!useMatch({ path: resolved.pathname, end });
@@ -35,9 +36,10 @@ function SidebarNavItem({ to, end, label, icon: Icon, expanded }) {
         px: expanded ? 1.25 : 0,
         minHeight: 38,
         justifyContent: expanded ? "flex-start" : "center",
-        color: isActive ? "#fff" : "#C9D6E8",
-        bgcolor: isActive ? "primary.main" : "transparent",
-        "&:hover": { bgcolor: isActive ? "primary.main" : "rgba(255,255,255,0.06)", color: "#fff" },
+        color: isActive ? "#fff" : "var(--sidebar-text)",
+        bgcolor: isActive ? "var(--sidebar-active)" : "transparent",
+        boxShadow: isActive ? "inset 3px 0 0 var(--color-accent)" : "none",
+        "&:hover": { bgcolor: isActive ? "var(--sidebar-active)" : "rgba(255,255,255,0.06)", color: "#fff" },
       }}
     >
       <ListItemIcon sx={{ minWidth: expanded ? 30 : "auto", color: "inherit", justifyContent: "center" }}>
@@ -71,7 +73,7 @@ export default function Sidebar() {
       sx={{
         width: expanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
         flexShrink: 0,
-        bgcolor: "#002050",
+        bgcolor: "var(--sidebar-bg)",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
@@ -83,11 +85,15 @@ export default function Sidebar() {
       <Typography
         noWrap
         sx={{
-          fontWeight: 700, fontSize: 15, pb: 2.5, letterSpacing: "-0.01em",
-          px: expanded ? 1.25 : 0, textAlign: expanded ? "left" : "center",
+          fontWeight: 700,
+          fontSize: 15,
+          pb: 2.5,
+          letterSpacing: "-0.01em",
+          px: expanded ? 1.25 : 0,
+          textAlign: expanded ? "left" : "center",
         }}
       >
-        {expanded ? <>Cirrus <Box component="span" sx={{ color: "#6FA8E0" }}>CRM</Box></> : "C"}
+        {expanded ? <>Cirrus <Box component="span" sx={{ color: "var(--color-accent)" }}>CRM</Box></> : "C"}
       </Typography>
 
       <ThemeToggle expanded={expanded} />
@@ -106,16 +112,20 @@ export default function Sidebar() {
         {user && expanded && (
           <Box sx={{ px: 1.25, pb: 1.25 }}>
             <Typography noWrap sx={{ fontSize: 12.5, fontWeight: 600, color: "#fff" }}>{user.first_name} {user.last_name}</Typography>
-            <Typography sx={{ fontSize: 11, color: "#8FA6C4", textTransform: "capitalize" }}>{user.role}</Typography>
+            <Typography sx={{ fontSize: 11, color: "var(--sidebar-text-muted)", textTransform: "capitalize" }}>{user.role}</Typography>
           </Box>
         )}
         <ListItemButton
           onClick={handleLogout}
           disableGutters
           sx={{
-            borderRadius: 1.5, py: 1, px: expanded ? 1.25 : 0, minHeight: 38,
+            borderRadius: 1.5,
+            py: 1,
+            px: expanded ? 1.25 : 0,
+            minHeight: 38,
             justifyContent: expanded ? "flex-start" : "center",
-            color: "#C9D6E8", "&:hover": { bgcolor: "rgba(255,255,255,0.06)", color: "#fff" },
+            color: "var(--sidebar-text)",
+            "&:hover": { bgcolor: "rgba(255,255,255,0.06)", color: "#fff" },
           }}
         >
           <ListItemIcon sx={{ minWidth: expanded ? 30 : "auto", color: "inherit", justifyContent: "center" }}>

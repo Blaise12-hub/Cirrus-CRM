@@ -1,50 +1,83 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  Box, Typography, Alert, CircularProgress,
-  Dialog, DialogTitle, DialogContent, DialogActions, Button
-} from "@mui/material";
-import { Eye, EyeOff, Mail, Phone, Lock, Check, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { Box, Typography, Alert, CircularProgress, Button } from "@mui/material";
+import { Eye, EyeOff, Building2, Users, Target, ArrowRight, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import AuthIllustration from "../components/AuthIllustration";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, validateLogin, showDemoLogins } from "../utils/loginForm";
+
+// All colors are CSS variables from index.css (mirrors src/design/tokens.js),
+// so this page follows light/dark mode and the evergreen palette automatically.
+const inputStyle = {
+  width: "100%",
+  height: 44,
+  padding: "0 14px",
+  fontSize: 14,
+  color: "var(--color-text)",
+  backgroundColor: "var(--color-surface)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 8,
+  outline: "none",
+  transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+  fontFamily: "inherit",
+};
+
+const focusRing = (e) => {
+  e.target.style.borderColor = "var(--color-primary)";
+  e.target.style.boxShadow = "0 0 0 3px var(--color-primary-tint)";
+};
+const blurRing = (e) => {
+  e.target.style.borderColor = "var(--color-border)";
+  e.target.style.boxShadow = "none";
+};
+
+const labelSx = { display: "block", fontSize: 13, fontWeight: 600, color: "text.primary", mb: 0.75 };
+
+function ModelTile({ icon: Icon, label }) {
+  return (
+    <Box
+      sx={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 1,
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: "var(--sidebar-active)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <Box sx={{ color: "var(--color-accent)", display: "flex" }}>
+        <Icon size={18} />
+      </Box>
+      <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{label}</Typography>
+    </Box>
+  );
+}
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Form states
-  const [authMode, setAuthMode] = useState("email"); // "email" | "phone"
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Forgot password modal
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const demoEnabled = showDemoLogins(import.meta.env);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const problem = validateLogin(email, password);
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setError("");
-
-    const loginIdentifier = authMode === "email" ? email.trim() : phone.trim();
-    if (!loginIdentifier) {
-      setError(authMode === "email" ? "Please enter your email address" : "Please enter your phone number");
-      return;
-    }
-    if (!password) {
-      setError("Please enter your password");
-      return;
-    }
-
     setLoading(true);
     try {
-      // If phone was entered, in CRM mock we authenticate with the email or identifier
-      await login(loginIdentifier, password);
+      await login(email.trim(), password);
       navigate("/", { replace: true });
     } catch (err) {
       setError(err.message || "Invalid credentials. Please verify your login details.");
@@ -53,304 +86,130 @@ export default function Login() {
     }
   };
 
-  const handleDemoFill = (demoEmail, demoRole) => {
-    setAuthMode("email");
+  const handleDemoFill = (demoEmail) => {
     setEmail(demoEmail);
-    setPassword("password123");
+    setPassword(DEMO_PASSWORD);
     setError("");
   };
 
-  const handleForgotSubmit = (e) => {
-    e.preventDefault();
-    if (!forgotEmail) return;
-    setForgotSuccess(true);
-    setTimeout(() => {
-      setForgotSuccess(false);
-      setForgotOpen(false);
-      setForgotEmail("");
-    }, 2500);
-  };
-
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "#002050",
-        p: { xs: 2, sm: 3, md: 4 },
-        background: "linear-gradient(135deg, #00173D 0%, #002050 60%, #0A3E7A 100%)",
-      }}
-    >
-      {/* Outer Container matching Prototype Image 1 */}
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: { xs: "column", md: "row" }, bgcolor: "background.default" }}>
+      {/* Left: brand panel (hidden on phones) */}
       <Box
         sx={{
-          width: "100%",
-          maxWidth: 1040,
-          minHeight: 580,
-          bgcolor: "#FFFFFF",
-          borderRadius: "20px",
-          boxShadow: "0 25px 60px -15px rgba(0, 15, 45, 0.45)",
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          overflow: "hidden",
-          border: "1px solid rgba(255, 255, 255, 0.15)",
+          flex: { md: "0 0 44%" },
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          justifyContent: "space-between",
+          p: { md: 5, lg: 7 },
+          bgcolor: "var(--sidebar-bg)",
+          color: "#fff",
         }}
       >
-        {/* Left Side: Modern Brand Illustration Panel (Image 1) */}
-        <Box
-          sx={{
-            flex: { md: "1 1 50%" },
-            bgcolor: "#F4F8FA",
-            display: { xs: "none", md: "flex" },
-            flexDirection: "column",
-            borderRight: "1px solid #E6EEF3",
-            position: "relative",
-          }}
-        >
-          <AuthIllustration brandTitle="CIRRUS CRM" />
+        <Typography sx={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>
+          Cirrus <Box component="span" sx={{ color: "var(--color-accent)" }}>CRM</Box>
+        </Typography>
+
+        <Box>
+          <Typography sx={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--color-accent)", mb: 1.5 }}>
+            Sales workspace
+          </Typography>
+          <Typography component="h2" sx={{ fontSize: { md: 34, lg: 40 }, fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.02em", mb: 2 }}>
+            Every relationship.
+            <br />
+            One connected view.
+          </Typography>
+          <Typography sx={{ fontSize: 14, lineHeight: 1.6, color: "var(--sidebar-text)", maxWidth: 420, mb: 4 }}>
+            Accounts, contacts and deals in one place, so your team always knows what to do next.
+          </Typography>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, maxWidth: 440 }}>
+            <ModelTile icon={Building2} label="Account" />
+            <Box sx={{ color: "var(--sidebar-text-muted)", display: "flex" }}><ArrowRight size={16} /></Box>
+            <ModelTile icon={Users} label="Contact" />
+            <Box sx={{ color: "var(--sidebar-text-muted)", display: "flex" }}><ArrowRight size={16} /></Box>
+            <ModelTile icon={Target} label="Opportunity" />
+          </Box>
         </Box>
 
-        {/* Right Side: Clean Pro Sign-In Form (Image 1) */}
-        <Box
-          sx={{
-            flex: { xs: "1 1 100%", md: "1 1 50%" },
-            p: { xs: 3.5, sm: 5, md: "48px 52px" },
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            bgcolor: "#FFFFFF",
-          }}
-        >
-          {/* Header Title & Subtitle */}
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              component="h1"
-              sx={{
-                fontSize: { xs: 24, sm: 27 },
-                fontWeight: 800,
-                color: "#1E293B",
-                letterSpacing: "-0.02em",
-                lineHeight: 1.25,
-                mb: 1,
-              }}
-            >
-              Welcome to Cirrus CRM !!
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 13,
-                color: "#64748B",
-                lineHeight: 1.5,
-              }}
-            >
-              An Embedded professional/ leadership development Platform
-            </Typography>
-          </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "var(--sidebar-text-muted)", fontSize: 12.5 }}>
+          <ShieldCheck size={14} />
+          <span>Role-based access for admins, managers and sales reps.</span>
+        </Box>
+      </Box>
 
-          {/* Email / Phone Tabs matching Image 1 */}
-          <Box
-            sx={{
-              display: "flex",
-              borderBottom: "1px solid #E2E8F0",
-              mb: 3,
-              gap: 4,
-            }}
-          >
-            <Box
-              onClick={() => { setAuthMode("email"); setError(""); }}
-              sx={{
-                pb: 1.25,
-                cursor: "pointer",
-                position: "relative",
-                fontSize: 14,
-                fontWeight: authMode === "email" ? 700 : 500,
-                color: authMode === "email" ? "#0C5A75" : "#94A3B8",
-                transition: "all 0.2s ease",
-                "&:after": authMode === "email" ? {
-                  content: '""',
-                  position: "absolute",
-                  bottom: -1,
-                  left: 0,
-                  right: 0,
-                  height: "2.5px",
-                  bgcolor: "#0C5A75",
-                  borderRadius: "2px",
-                } : {},
-              }}
-            >
-              Email
-            </Box>
-            <Box
-              onClick={() => { setAuthMode("phone"); setError(""); }}
-              sx={{
-                pb: 1.25,
-                cursor: "pointer",
-                position: "relative",
-                fontSize: 14,
-                fontWeight: authMode === "phone" ? 700 : 500,
-                color: authMode === "phone" ? "#0C5A75" : "#94A3B8",
-                transition: "all 0.2s ease",
-                "&:after": authMode === "phone" ? {
-                  content: '""',
-                  position: "absolute",
-                  bottom: -1,
-                  left: 0,
-                  right: 0,
-                  height: "2.5px",
-                  bgcolor: "#0C5A75",
-                  borderRadius: "2px",
-                } : {},
-              }}
-            >
-              Phone
-            </Box>
-          </Box>
+      {/* Right: sign-in form */}
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", p: { xs: 3, sm: 5 } }}>
+        <Box sx={{ width: "100%", maxWidth: 400 }}>
+          <Typography sx={{ display: { xs: "block", md: "none" }, fontWeight: 700, fontSize: 18, mb: 3 }}>
+            Cirrus <Box component="span" sx={{ color: "primary.main" }}>CRM</Box>
+          </Typography>
 
-          {/* Login Form */}
+          <Typography component="h1" sx={{ fontSize: { xs: 24, sm: 28 }, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.2, mb: 0.75 }}>
+            Welcome back
+          </Typography>
+          <Typography sx={{ fontSize: 14, color: "text.secondary", mb: 3.5 }}>
+            Sign in to your sales workspace.
+          </Typography>
+
           <Box component="form" onSubmit={handleSubmit} noValidate>
             {error && (
-              <Alert
-                severity="error"
-                sx={{
-                  mb: 2.5,
-                  borderRadius: "8px",
-                  fontSize: 13,
-                  py: 0.5,
-                  "& .MuiAlert-message": { fontWeight: 500 },
-                }}
-              >
+              <Alert severity="error" sx={{ mb: 2.5, fontSize: 13 }} role="alert">
                 {error}
               </Alert>
             )}
 
-            {/* Email Address / Phone Input */}
             <Box sx={{ mb: 2.25 }}>
-              <Typography
-                component="label"
-                htmlFor="auth-identifier"
-                sx={{
-                  display: "block",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#334155",
-                  mb: 0.75,
-                }}
-              >
-                {authMode === "email" ? "Email address" : "Phone number"}
+              <Typography component="label" htmlFor="auth-email" sx={labelSx}>
+                Email address
               </Typography>
-              <Box
-                sx={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <input
-                  id="auth-identifier"
-                  type={authMode === "email" ? "email" : "tel"}
-                  value={authMode === "email" ? email : phone}
-                  onChange={(e) => authMode === "email" ? setEmail(e.target.value) : setPhone(e.target.value)}
-                  placeholder={authMode === "email" ? "abc@cirrus.ai" : "+1 (555) 019-2834"}
-                  required
-                  autoFocus
-                  style={{
-                    width: "100%",
-                    height: "44px",
-                    padding: "0 14px",
-                    fontSize: "14px",
-                    color: "#1E293B",
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #CBD5E1",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-                    fontFamily: "inherit",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#0C5A75";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(12, 90, 117, 0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#CBD5E1";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-              </Box>
+              <input
+                id="auth-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                autoComplete="username"
+                autoFocus
+                required
+                style={inputStyle}
+                onFocus={focusRing}
+                onBlur={blurRing}
+              />
             </Box>
 
-            {/* Password Input with Visible Toggle (User Request & Image 1) */}
-            <Box sx={{ mb: 2.25 }}>
-              <Typography
-                component="label"
-                htmlFor="auth-password"
-                sx={{
-                  display: "block",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#334155",
-                  mb: 0.75,
-                }}
-              >
+            <Box sx={{ mb: 3 }}>
+              <Typography component="label" htmlFor="auth-password" sx={labelSx}>
                 Password
               </Typography>
-              <Box
-                sx={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
+              <Box sx={{ position: "relative", display: "flex", alignItems: "center" }}>
                 <input
                   id="auth-password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="Your password"
+                  autoComplete="current-password"
                   required
-                  style={{
-                    width: "100%",
-                    height: "44px",
-                    padding: "0 46px 0 14px",
-                    fontSize: "14px",
-                    color: "#1E293B",
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #CBD5E1",
-                    borderRadius: "8px",
-                    outline: "none",
-                    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-                    fontFamily: "inherit",
-                    letterSpacing: showPassword ? "normal" : "2px",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#0C5A75";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(12, 90, 117, 0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#CBD5E1";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  style={{ ...inputStyle, padding: "0 46px 0 14px" }}
+                  onFocus={focusRing}
+                  onBlur={blurRing}
                 />
-
-                {/* Password Visibility Toggle Button */}
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   title={showPassword ? "Hide password" : "Show password"}
                   style={{
                     position: "absolute",
-                    right: "12px",
+                    right: 12,
                     background: "none",
                     border: "none",
-                    padding: "6px",
+                    padding: 6,
                     cursor: "pointer",
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: showPassword ? "#0C5A75" : "#94A3B8",
-                    borderRadius: "4px",
+                    color: showPassword ? "var(--color-primary)" : "var(--color-text-muted)",
+                    borderRadius: 4,
                   }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -358,81 +217,12 @@ export default function Login() {
               </Box>
             </Box>
 
-            {/* Keep me signed in & Forgot password row */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 2.75,
-              }}
-            >
-              <Box
-                component="label"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={keepSignedIn}
-                  onChange={(e) => setKeepSignedIn(e.target.checked)}
-                  style={{
-                    width: 16,
-                    height: 16,
-                    accentColor: "#0C5A75",
-                    cursor: "pointer",
-                  }}
-                />
-                <Typography sx={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>
-                  Keep me signed in
-                </Typography>
-              </Box>
-
-              <Typography
-                component="button"
-                type="button"
-                onClick={() => setForgotOpen(true)}
-                sx={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#0C5A75",
-                  cursor: "pointer",
-                  textDecoration: "none",
-                  "&:hover": { textDecoration: "underline" },
-                }}
-              >
-                Forgot password?
-              </Typography>
-            </Box>
-
-            {/* Sign in Button */}
             <Button
               type="submit"
               variant="contained"
               fullWidth
               disabled={loading}
-              sx={{
-                height: 44,
-                bgcolor: "#0C5A75",
-                color: "#FFFFFF",
-                fontSize: 14,
-                fontWeight: 700,
-                textTransform: "none",
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(12, 90, 117, 0.25)",
-                "&:hover": {
-                  bgcolor: "#084459",
-                  boxShadow: "0 4px 12px rgba(12, 90, 117, 0.35)",
-                },
-              }}
+              sx={{ height: 44, fontSize: 14, fontWeight: 700, borderRadius: "8px" }}
             >
               {loading ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -445,159 +235,50 @@ export default function Login() {
             </Button>
           </Box>
 
-          {/* First time here? Sign up instead link */}
-          <Box sx={{ mt: 3, textAlign: "center" }}>
-            <Typography sx={{ fontSize: 13, color: "#64748B" }}>
-              First time here?{" "}
-              <Link
-                to="/signup"
-                style={{
-                  color: "#0C5A75",
-                  fontWeight: 700,
-                  textDecoration: "underline",
-                }}
-              >
-                Sign up
-              </Link>{" "}
-              instead.
-            </Typography>
-          </Box>
+          <Typography sx={{ mt: 3, textAlign: "center", fontSize: 13, color: "text.secondary" }}>
+            First time here?{" "}
+            <Link to="/signup" style={{ color: "var(--color-primary)", fontWeight: 700, textDecoration: "underline" }}>
+              Sign up
+            </Link>{" "}
+            instead.
+          </Typography>
 
-          {/* Quick Demo Credentials for Fast Pair-Testing */}
-          <Box
-            sx={{
-              mt: 3.5,
-              pt: 2.5,
-              borderTop: "1px dashed #E2E8F0",
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-            }}
-          >
-            <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: 0.5 }}>
-              Quick 1-Click Demo Logins:
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              <Box
-                component="button"
-                type="button"
-                onClick={() => handleDemoFill("admin@cirrus.local", "Admin")}
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "6px",
-                  border: "1px solid #CBD5E1",
-                  bgcolor: "#F8FAFC",
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: "#334155",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  "&:hover": { bgcolor: "#E2E8F0", borderColor: "#94A3B8" },
-                }}
-              >
-                Admin (admin@cirrus.local)
-              </Box>
-              <Box
-                component="button"
-                type="button"
-                onClick={() => handleDemoFill("manager@cirrus.local", "Manager")}
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "6px",
-                  border: "1px solid #CBD5E1",
-                  bgcolor: "#F8FAFC",
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: "#334155",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  "&:hover": { bgcolor: "#E2E8F0", borderColor: "#94A3B8" },
-                }}
-              >
-                Manager
-              </Box>
-              <Box
-                component="button"
-                type="button"
-                onClick={() => handleDemoFill("rep@cirrus.local", "Sales Rep")}
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "6px",
-                  border: "1px solid #CBD5E1",
-                  bgcolor: "#F8FAFC",
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: "#334155",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  "&:hover": { bgcolor: "#E2E8F0", borderColor: "#94A3B8" },
-                }}
-              >
-                Sales Rep
+          {demoEnabled && (
+            <Box sx={{ mt: 3.5, pt: 2.5, borderTop: "1px dashed", borderColor: "divider", display: "flex", flexDirection: "column", gap: 1 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Quick 1-click demo logins
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {DEMO_ACCOUNTS.map((a) => (
+                  <Box
+                    key={a.email}
+                    component="button"
+                    type="button"
+                    onClick={() => handleDemoFill(a.email)}
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: "6px",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      color: "text.primary",
+                      fontFamily: "inherit",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      "&:hover": { borderColor: "primary.main", color: "primary.main" },
+                    }}
+                  >
+                    {a.label}
+                  </Box>
+                ))}
               </Box>
             </Box>
-          </Box>
+          )}
         </Box>
       </Box>
-
-      {/* Forgot Password Interactive Modal */}
-      <Dialog
-        open={forgotOpen}
-        onClose={() => setForgotOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: "12px", p: 1 } }}
-      >
-        <DialogTitle sx={{ fontWeight: 700, fontSize: 18, color: "#1E293B", pb: 1 }}>
-          Reset your password
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ fontSize: 13, color: "#64748B", mb: 2 }}>
-            Enter your registered email address and we'll send you instructions to reset your password.
-          </Typography>
-          {forgotSuccess ? (
-            <Alert severity="success" sx={{ fontSize: 13 }}>
-              Password reset link sent! Check your inbox.
-            </Alert>
-          ) : (
-            <Box component="form" onSubmit={handleForgotSubmit}>
-              <input
-                type="email"
-                placeholder="name@company.com"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                required
-                style={{
-                  width: "100%",
-                  height: 42,
-                  padding: "0 14px",
-                  borderRadius: "8px",
-                  border: "1px solid #CBD5E1",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                }}
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setForgotOpen(false)} sx={{ textTransform: "none", color: "#64748B" }}>
-            Cancel
-          </Button>
-          {!forgotSuccess && (
-            <Button
-              onClick={handleForgotSubmit}
-              variant="contained"
-              sx={{ bgcolor: "#0C5A75", textTransform: "none", fontWeight: 600, "&:hover": { bgcolor: "#084459" } }}
-            >
-              Send Reset Link
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

@@ -1,10 +1,12 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme, alpha } from "@mui/material/styles";
+import { buildPalette } from "./design/palette";
+import { getTokens } from "./design/tokens";
 
-// Palette sampled directly from the brand image: navy #002050, light gray
-// #DFE2E8, medium blue #1160B7, light blue #B1D6F0, terracotta #D24726.
-// Semantic colors (error/success/warning) reuse the exact hex values already
-// established in index.css's dark-mode CSS pass — same red/green/amber
-// everywhere, not a second palette invented for MUI specifically.
+// Colors come from src/design/tokens.js (single source of truth, mirrored in
+// index.css). If this file lives at src/theme/index.js instead of src/theme.js,
+// change the two imports above to "../design/...".
+// Brand = evergreen. Amber is the accent: use `accent.main` for fills and
+// `accent.dark` for any text that sits on white.
 
 const shared = {
   typography: {
@@ -55,39 +57,37 @@ const shared = {
         root: { fontSize: 13 },
       },
     },
+    // Standard alerts: tinted background + body-color text in both modes.
+    // MUI's default derives the tint by darkening/lightening `light`, which
+    // washes out on a dark surface.
+    MuiAlert: {
+      styleOverrides: {
+        root: ({ theme, ownerState }) => {
+          const c = theme.palette[ownerState.severity || "info"];
+          if (!c || (ownerState.variant && ownerState.variant !== "standard")) return {};
+          return {
+            backgroundColor: c.light,
+            color: theme.palette.text.primary,
+            border: `1px solid ${alpha(c.main, 0.35)}`,
+            "& .MuiAlert-icon": { color: c.main },
+          };
+        },
+      },
+    },
   },
 };
 
+function accentFor(mode) {
+  const t = getTokens(mode);
+  return { main: t.accent.main, dark: t.accent.dark, light: t.accent.light, contrastText: t.accent.contrastText };
+}
+
 export const lightTheme = createTheme({
   ...shared,
-  palette: {
-    mode: "light",
-    primary: { main: "#1160B7", dark: "#0A3E7A" },
-    error: { main: "#B3261E" },
-    success: { main: "#2E7D46" },
-    warning: { main: "#B25E09" },
-    info: { main: "#5E7CE2" },
-    background: { default: "#DFE2E8", paper: "#FFFFFF" },
-    text: { primary: "#1A1A1A", secondary: "#6B6B6B" },
-    divider: "#D8D8D8",
-    // Custom fifth palette color (terracotta) — not part of MUI's standard
-    // palette keys, works fine in plain JS via sx={{ color: 'accent.main' }}.
-    accent: { main: "#D24726", contrastText: "#FFFFFF" },
-  },
+  palette: { ...buildPalette("light"), accent: accentFor("light") },
 });
 
 export const darkTheme = createTheme({
   ...shared,
-  palette: {
-    mode: "dark",
-    primary: { main: "#4A9EFF", dark: "#7AB8FF" },
-    error: { main: "#B3261E" },
-    success: { main: "#2E7D46" },
-    warning: { main: "#B25E09" },
-    info: { main: "#5E7CE2" },
-    background: { default: "#14161C", paper: "#1D2029" },
-    text: { primary: "#EDEDEF", secondary: "#9498A3" },
-    divider: "#2E323D",
-    accent: { main: "#D24726", contrastText: "#FFFFFF" },
-  },
+  palette: { ...buildPalette("dark"), accent: accentFor("dark") },
 });

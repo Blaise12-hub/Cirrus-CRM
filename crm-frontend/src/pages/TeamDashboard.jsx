@@ -5,19 +5,23 @@ import {
   PieChart, Pie, Cell, Legend, AreaChart, Area,
 } from "recharts";
 import {
-  Box, Card, CardContent, Typography, Alert,
-  Table, TableHead, TableBody, TableRow, TableCell,
+  Box, Card, CardContent, Typography, Alert, Table, TableHead, TableBody, TableRow, TableCell,
 } from "@mui/material";
 import { opportunitiesApi, leadsApi, dashboardApi } from "../api/resources";
 import { money } from "../components/Shared";
 import { useAuth } from "../context/AuthContext";
 import { DetailSkeleton } from "../components/Skeleton";
 import AnimatedCounter from "../components/AnimatedCounter";
-import { STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, tickStyle, monoTickStyle, tooltipStyle, WinRateGauge } from "./dashboardShared";
+import {
+  STAGE_COLORS, STAGE_LABELS, LEAD_STATUS_COLORS, STAT_ACCENTS,
+  useChartStyles, compactMoney, DashboardGreeting, WinRateGauge,
+} from "./DashboardShared";
 import QuickStartCards from "../components/QuickStartCards";
+import { MyTasksWidget } from "../components/Activity";
 
 // Plain CSS Grid via sx — see RepDashboard.jsx for why (MUI Grid v5 vs v6+ API split).
 const statGridSx = { display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1.75, mb: 3 };
+const threeColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr 1fr" }, gap: 2 };
 const twoColGridSx = { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 };
 
 function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
@@ -25,8 +29,8 @@ function StatCard({ label, value, sub, color, accentFrom, accentTo }) {
     <Card
       className="stat-card-accent"
       style={{
-        "--accent-from": accentFrom || "#1160B7",
-        "--accent-to": accentTo || "#5E7CE2",
+        "--accent-from": accentFrom || "var(--color-primary)",
+        "--accent-to": accentTo || "var(--color-accent)",
       }}
     >
       <CardContent>
@@ -61,6 +65,8 @@ function MiniRow({ onClick, primary, secondary }) {
 export default function TeamDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const cs = useChartStyles();
+  const A = STAT_ACCENTS;
   const [opportunities, setOpportunities] = useState([]);
   const [leads, setLeads] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -72,7 +78,9 @@ export default function TeamDashboard() {
     (async () => {
       try {
         const [opps, leadList, summaryData] = await Promise.all([
-          opportunitiesApi.list(), leadsApi.list(), dashboardApi.summary(),
+          opportunitiesApi.list(),
+          leadsApi.list(),
+          dashboardApi.summary(),
         ]);
         if (cancelled) return;
         setOpportunities(opps);
@@ -95,13 +103,19 @@ export default function TeamDashboard() {
   const wonTotal = opportunities.filter((o) => o.stage === "won").reduce((s, o) => s + Number(o.amount), 0);
   const newLeads = leads.filter((l) => l.status === "new");
 
-  const pipelineData = summary ? summary.pipeline.map((p) => ({ stage: STAGE_LABELS[p.stage], amount: p.total_amount, fill: STAGE_COLORS[p.stage] })) : [];
-  const leadsStatusData = summary ? summary.leads_by_status.map((s) => ({ name: s.status, value: s.count, fill: LEAD_STATUS_COLORS[s.status] || "#8A8D91" })) : [];
+  const pipelineData = summary
+    ? summary.pipeline.map((p) => ({ stage: STAGE_LABELS[p.stage], amount: p.total_amount, fill: STAGE_COLORS[p.stage] }))
+    : [];
+  const leadsStatusData = summary
+    ? summary.leads_by_status.map((s) => ({ name: s.status, value: s.count, fill: LEAD_STATUS_COLORS[s.status] || STAGE_COLORS.prospecting }))
+    : [];
   const leadsSourceData = summary ? summary.leads_by_source : [];
   const overdue = summary?.activity_load.overdue ?? 0;
-
   const cumulativeData = summary
-    ? summary.cumulative_sales.map((d) => ({ day: new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" }), cumulative: d.cumulative }))
+    ? summary.cumulative_sales.map((d) => ({
+        day: new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        cumulative: d.cumulative,
+      }))
     : [];
   const activityByRep = summary
     ? summary.activity_by_rep.map((r) => ({ rep: `${r.first_name} ${r.last_name}`, calls: r.calls, meetings: r.meetings }))
@@ -110,28 +124,32 @@ export default function TeamDashboard() {
 
   return (
     <Box className="view fade-in-up">
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 2.5 }}>Good morning, {user?.first_name || ""}</Typography>
+      <DashboardGreeting name={user?.first_name} />
 
       <QuickStartCards />
 
       <Box sx={statGridSx}>
         <StatCard
-          label="Open pipeline" value={<AnimatedCounter value={openTotal} format="money" />}
+          label="Open pipeline"
+          value={<AnimatedCounter value={openTotal} format="money" />}
           sub={`${open.length} open deals`}
-          accentFrom="#1160B7" accentTo="#5E7CE2"
+          accentFrom={A.brand[0]} accentTo={A.brand[1]}
         />
         <StatCard
-          label="Won this period" value={<AnimatedCounter value={wonTotal} format="money" />}
+          label="Won this period"
+          value={<AnimatedCounter value={wonTotal} format="money" />}
           color="success.main"
-          accentFrom="#2E7D46" accentTo="#4CAF50"
+          accentFrom={A.success[0]} accentTo={A.success[1]}
         />
         <StatCard
-          label="Total deals" value={<AnimatedCounter value={opportunities.length} />}
-          accentFrom="#8A8D91" accentTo="#B0BEC5"
+          label="Total deals"
+          value={<AnimatedCounter value={opportunities.length} />}
+          accentFrom={A.neutral[0]} accentTo={A.neutral[1]}
         />
         <StatCard
-          label="New leads" value={<AnimatedCounter value={newLeads.length} />}
-          accentFrom="#5E7CE2" accentTo="#90CAF9"
+          label="New leads"
+          value={<AnimatedCounter value={newLeads.length} />}
+          accentFrom={A.info[0]} accentTo={A.info[1]}
         />
       </Box>
 
@@ -143,7 +161,7 @@ export default function TeamDashboard() {
         </Alert>
       )}
 
-      <Box sx={twoColGridSx}>
+      <Box sx={threeColGridSx}>
         <Card>
           <CardContent>
             <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Deals closing soon</Typography>
@@ -172,34 +190,42 @@ export default function TeamDashboard() {
             ))}
           </CardContent>
         </Card>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Today's priorities</Typography>
+            <MyTasksWidget />
+          </CardContent>
+        </Card>
       </Box>
 
       {summary && (
         <>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, mt: 3.5, mb: 1.75 }}>Pipeline & Activity</Typography>
-
           <Box sx={statGridSx}>
             <StatCard
-              label="Weighted pipeline" value={<AnimatedCounter value={summary.weighted_value} format="money" />}
+              label="Weighted pipeline"
+              value={<AnimatedCounter value={summary.weighted_value} format="money" />}
               sub="amount × probability"
-              accentFrom="#1160B7" accentTo="#4A9EFF"
+              accentFrom={A.brand[0]} accentTo={A.brand[1]}
             />
             <StatCard
-              label="Overdue activities" value={<AnimatedCounter value={overdue} />}
+              label="Overdue activities"
+              value={<AnimatedCounter value={overdue} />}
               sub={`${summary.activity_load.due_today} due today`}
               color={overdue > 0 ? "error.main" : undefined}
-              accentFrom={overdue > 0 ? "#B3261E" : "#8A8D91"}
-              accentTo={overdue > 0 ? "#E57373" : "#B0BEC5"}
+              accentFrom={overdue > 0 ? A.danger[0] : A.neutral[0]}
+              accentTo={overdue > 0 ? A.danger[1] : A.neutral[1]}
             />
             <StatCard
-              label="Due next 7 days" value={<AnimatedCounter value={summary.activity_load.upcoming_7d} />}
-              accentFrom="#B25E09" accentTo="#FFB74D"
+              label="Due next 7 days"
+              value={<AnimatedCounter value={summary.activity_load.upcoming_7d} />}
+              accentFrom={A.warning[0]} accentTo={A.warning[1]}
             />
             <StatCard
               label="Recent deals value"
               value={<AnimatedCounter value={summary.recent_deals.reduce((s, d) => s + Number(d.amount || 0), 0)} format="money" />}
               sub={`last ${summary.recent_deals.length} deals`}
-              accentFrom="#5E7CE2" accentTo="#90CAF9"
+              accentFrom={A.info[0]} accentTo={A.info[1]}
             />
           </Box>
 
@@ -209,10 +235,10 @@ export default function TeamDashboard() {
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Pipeline by stage</Typography>
                 <ResponsiveContainer width="100%" height={230}>
                   <BarChart data={pipelineData} barCategoryGap="35%">
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                    <XAxis dataKey="stage" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
-                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cs.gridStroke} />
+                    <XAxis dataKey="stage" tick={cs.tickStyle} axisLine={{ stroke: cs.axisStroke }} tickLine={false} />
+                    <YAxis tickFormatter={compactMoney} allowDecimals={false} tick={cs.monoTickStyle} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => money(v)} contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
                     <Bar dataKey="amount" radius={[4, 4, 0, 0]} maxBarSize={64}>
                       {pipelineData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                     </Bar>
@@ -239,15 +265,15 @@ export default function TeamDashboard() {
                   <AreaChart data={cumulativeData}>
                     <defs>
                       <linearGradient id="cumFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1160B7" stopOpacity={0.25} />
-                        <stop offset="100%" stopColor="#1160B7" stopOpacity={0} />
+                        <stop offset="0%" stopColor={cs.brandFill} stopOpacity={0.25} />
+                        <stop offset="100%" stopColor={cs.brandFill} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                    <XAxis dataKey="day" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} interval={4} />
-                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => money(v)} contentStyle={tooltipStyle} />
-                    <Area type="monotone" dataKey="cumulative" stroke="#1160B7" strokeWidth={2} fill="url(#cumFill)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cs.gridStroke} />
+                    <XAxis dataKey="day" tick={cs.tickStyle} axisLine={{ stroke: cs.axisStroke }} tickLine={false} interval={4} />
+                    <YAxis tickFormatter={compactMoney} allowDecimals={false} tick={cs.monoTickStyle} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(v) => money(v)} contentStyle={cs.tooltipStyle} />
+                    <Area type="monotone" dataKey="cumulative" stroke={cs.brandFill} strokeWidth={2} fill="url(#cumFill)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -260,13 +286,13 @@ export default function TeamDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={activityByRep} barCategoryGap="35%">
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEEEEE" />
-                      <XAxis dataKey="rep" tick={tickStyle} axisLine={{ stroke: "#D8D8D8" }} tickLine={false} />
-                      <YAxis allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={cs.gridStroke} />
+                      <XAxis dataKey="rep" tick={cs.tickStyle} axisLine={{ stroke: cs.axisStroke }} tickLine={false} />
+                      <YAxis allowDecimals={false} tick={cs.monoTickStyle} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
                       <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
-                      <Bar dataKey="calls" name="Calls" fill="#1160B7" radius={[3, 3, 0, 0]} maxBarSize={48} />
-                      <Bar dataKey="meetings" name="Meetings" fill="#5E7CE2" radius={[3, 3, 0, 0]} maxBarSize={48} />
+                      <Bar dataKey="calls" name="Calls" fill={cs.brandFill} radius={[3, 3, 0, 0]} maxBarSize={48} />
+                      <Bar dataKey="meetings" name="Meetings" fill={cs.forecastWeighted} radius={[3, 3, 0, 0]} maxBarSize={48} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -329,10 +355,10 @@ export default function TeamDashboard() {
               <Box sx={twoColGridSx}>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={leadsStatusData} dataKey="value" nameKey="name" outerRadius={75} label={{ fontSize: 11, fontFamily: "IBM Plex Sans" }}>
+                    <Pie data={leadsStatusData} dataKey="value" nameKey="name" outerRadius={75} label={{ fontSize: 11, fontFamily: "IBM Plex Sans", fill: cs.tickStyle.fill }}>
                       {leadsStatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                     </Pie>
-                    <Tooltip contentStyle={tooltipStyle} />
+                    <Tooltip contentStyle={cs.tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11.5, fontFamily: "IBM Plex Sans" }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -341,11 +367,11 @@ export default function TeamDashboard() {
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={leadsSourceData} layout="vertical" margin={{ left: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EEEEEE" />
-                      <XAxis type="number" allowDecimals={false} tick={monoTickStyle} axisLine={false} tickLine={false} />
-                      <YAxis type="category" dataKey="lead_source" width={90} tick={tickStyle} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#F3F2F2" }} />
-                      <Bar dataKey="count" fill="#1160B7" radius={[0, 4, 4, 0]} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={cs.gridStroke} />
+                      <XAxis type="number" allowDecimals={false} tick={cs.monoTickStyle} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="lead_source" width={90} tick={cs.tickStyle} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={cs.tooltipStyle} cursor={{ fill: cs.cursorFill }} />
+                      <Bar dataKey="count" fill={cs.brandFill} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
