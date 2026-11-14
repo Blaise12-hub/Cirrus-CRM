@@ -102,7 +102,7 @@ export default function Notifications() {
     dismissNotification,
     clearAll,
   } = useNotifications();
-  const { showSnackbar } = useSnackbar ? useSnackbar() : { showSnackbar: () => {} };
+  const { showSnackbar } = useSnackbar();
 
   // Prototype tabs: "all" | "messages" | "requests" | "status_change"
   const [activeTab, setActiveTab] = useState("all");

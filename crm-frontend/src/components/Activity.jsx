@@ -100,3 +100,91 @@ export function ActivityLogForm({ parentType, parentId, onCreated }) {
     </Box>
   );
 }
+
+
+export function MyTasksWidget() {
+  const [tasks, setTasks] = useState([
+    { id: 1, subject: "Prepare Acme customer handoff", meta: "Acme Industries · Today, 10:00 AM", priority: "High", overdue: false },
+    { id: 2, subject: "Call Daniel Kim about revised terms", meta: "Summit Manufacturing · Today, 11:30 AM", priority: "High", overdue: false },
+    { id: 3, subject: "Send Harbor proposal follow-up", meta: "Harbor Retail · Yesterday, 4:00 PM", priority: "Overdue", overdue: true },
+  ]);
+
+  const toggleTask = (id) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  if (tasks.length === 0) {
+    return (
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", py: 1 }}>
+        All caught up! No urgent tasks.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 0.5 }}>
+      {tasks.map((task) => (
+        <Box
+          key={task.id}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            p: "9px 12px",
+            borderRadius: "7px",
+            bgcolor: task.overdue ? "rgba(220, 38, 38, 0.08)" : "action.hover",
+            border: "1px solid",
+            borderColor: task.overdue ? "rgba(220, 38, 38, 0.3)" : "divider",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}>
+            <Box
+              component="button"
+              type="button"
+              onClick={() => toggleTask(task.id)}
+              aria-label="Complete task"
+              sx={{
+                width: 18,
+                height: 18,
+                borderRadius: "4px",
+                border: "1.5px solid",
+                borderColor: task.overdue ? "error.main" : "text.secondary",
+                bgcolor: "transparent",
+                cursor: "pointer",
+                p: 0,
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": { bgcolor: "action.selected" },
+              }}
+            />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography noWrap sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
+                {task.subject}
+              </Typography>
+              <Typography noWrap sx={{ fontSize: 11, color: "text.secondary" }}>
+                {task.meta}
+              </Typography>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              fontSize: 10.5,
+              fontWeight: 700,
+              px: 0.85,
+              py: "2px",
+              borderRadius: "4px",
+              bgcolor: task.overdue ? "error.main" : "warning.main",
+              color: "#fff",
+              flexShrink: 0,
+              ml: 1,
+            }}
+          >
+            {task.priority}
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  );
+}
